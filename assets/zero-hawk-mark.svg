@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+<title id="title">Zero Hawk</title><desc id="desc">Angular hawk head and swept wing in charcoal and lime.</desc>
+<rect width="256" height="256" rx="54" fill="#0b0f12"/>
+<path fill="#B7F34A" d="M30 63 119 105 81 121 27 102 83 143 31 191 129 148 101 130 158 119 221 85 177 79 148 91 103 70Z"/>
+<path fill="#F4F7EF" d="m101 130 47-39 32-8 34 5 20 15-23 7-18 25-30 20-39-4 25-17-31 2-36 27 19-33Z"/>
+<path fill="#0b0f12" d="m190 94 24 8-18 5-14-7Z"/>
+<path fill="#B7F34A" d="m177 111 34 7-25 12-20-6Z"/>
+<path fill="#0b0f12" d="m207 120 29 6-20 10-24-3Z"/>
+</svg>
