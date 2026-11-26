@@ -27,10 +27,11 @@ ICONS = {
 
 NAV = [
     ("Work", [("Today", "/", "today"), ("Your company", "/train", "train"), ("Outbox", "/drafts", "outbox"),
-              ("Inboxes", "/connections", "inbox"), ("Conversations", "/inbox", "chat")]),
+              ("Inboxes", "/connections", "inbox"), ("Conversations", "/inbox", "chat"), ("Email warmup", "/warmup", "inbox")]),
     ("Pipeline", [("Signals", "/signals", "signals"), ("Discover", "/discover", "discover"),
                   ("Companies", "/companies", "companies"), ("Contacts", "/contacts", "contacts"),
                   ("Campaigns", "/campaigns", "campaigns")]),
+    ("Planning", [("Calendar", "/calendar", "usage"), ("Set up", "/setup", "settings"), ("Feature suite", "/suite", "signals")]),
     ("System", [("Activity", "/activity", "activity"), ("Usage", "/usage", "usage"), ("Controls", "/controls", "controls"),
                 ("Compliance", "/compliance", "shield"), ("WhatsApp", "/whatsapp", "phone"),
                 ("Settings", "/settings", "settings"), ("Help", "/help", "help")]),

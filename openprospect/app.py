@@ -330,3 +330,7 @@ app.include_router(platform_router)
 from .extra_routes import router as extra_router
 app.include_router(extra_router)
 
+
+
+from .suite_routes import router as suite_router
+app.include_router(suite_router)
