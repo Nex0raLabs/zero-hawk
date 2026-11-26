@@ -13,8 +13,8 @@ router = APIRouter()
 def e(v):
     return html.escape(str(v or ""), quote=True)
 
-def page(body):
-    return HTMLResponse(render_shell(body, "/setup"))
+def page(body, path="/setup"):
+    return HTMLResponse(render_shell(body, path))
 
 def init_suite_db():
     with connect() as c:
@@ -59,11 +59,11 @@ def setup_hub():
     init_suite_db()
     sections = [
       ("Get started", [("Install ZERO HAWK","Already complete","/"),("Add provider keys","SMTP, AI and address-checking settings","/settings"),("Connect your email","SMTP and IMAP mailbox connection","/connections"),("Train your company profile","Offer, ideal customer and writing voice","/train"),("Warm up your mailbox","TrulyInbox warmup integration","/warmup")]),
-      ("Sending", [("Inboxes","Mailboxes and sending status","/connections"),("Domains and email records","SPF, DKIM, DMARC and MX checks","/records"),("Sending mode and keys","Provider settings and API keys","/settings"),("Limits and rules","Daily limits, quiet hours and stop switch","/controls"),("Opt-outs and bounces","Suppression and unsubscribe controls","/compliance")]),
+      ("Sending", [("Inboxes","Mailboxes and sending status","/connections"),("Domains and email records","SPF, DKIM, DMARC and MX checks","/settings"),("Sending mode and keys","Provider settings and API keys","/settings"),("Limits and rules","Daily limits, quiet hours and stop switch","/controls"),("Opt-outs and bounces","Suppression and unsubscribe controls","/compliance")]),
       ("Finding people", [("Your company","Company profile and offer","/train"),("Signals","Buying signals and evidence","/signals"),("Find businesses","Discover local businesses","/discover"),("People and contacts","Saved people and verification","/contacts")]),
-      ("Inbound", [("Leads from forms","Inbound lead capture and routing","/leads"),("Conversations","Email and WhatsApp inbox","/inbox"),("Brand mentions","Mention monitoring setup","/mentions"),("Texting and consent","WhatsApp and contact permissions","/whatsapp")]),
+      ("Inbound", [("Leads from forms","Inbound lead capture and routing","/inbox"),("Conversations","Email and WhatsApp inbox","/inbox"),("Brand mentions","Mention monitoring setup","/signals"),("Texting and consent","WhatsApp and contact permissions","/whatsapp")]),
       ("Your agent", [("Connect and permissions","AI provider and approval boundaries","/settings"),("Agent activity","Review actions and history","/activity"),("Autopilot","Start, pause and inspect the research loop","/controls")]),
-      ("Account", [("Calendar and bookings","Meetings, schedule and booking link","/calendar"),("Engine","Automation status and event log","/controls"),("Events and webhooks","Outbound event integrations","/events"),("Activity","Full action history","/activity"),("Help","Setup guide and local data","/help")]),
+      ("Account", [("Calendar and bookings","Meetings, schedule and booking link","/calendar"),("Engine","Automation status and event log","/controls"),("Events and webhooks","Outbound event integrations","/activity"),("Activity","Full action history","/activity"),("Help","Setup guide and local data","/help")]),
       ("Everything ZERO HAWK does", [("Feature suite","Companies, people, campaigns, warmup, inbox and analytics","/suite")])
     ]
     blocks = []
@@ -118,7 +118,7 @@ def calendar_page(week: str = ""):
     <div class='cols'><section><h2>Add event or meeting</h2><form method='post' action='/calendar/events'><label>Title</label><input name='title' required placeholder='Discovery call with client'><label>Start time</label><input type='datetime-local' name='starts_at' required><label>End time</label><input type='datetime-local' name='ends_at'><label>Type</label><select name='kind'><option value='meeting'>Meeting</option><option value='call'>Call</option><option value='follow-up'>Follow-up</option><option value='task'>Task</option></select><label>Notes</label><textarea name='notes'></textarea><button>Save to calendar</button></form></section>
     <section><h2>Booking link</h2><p class='muted'>Save your external booking page so you can share it with prospects. This does not create a public booking service by itself.</p><form method='post' action='/calendar/booking'><input name='label' placeholder='Booking page name' required><input name='url' type='url' placeholder='https://cal.com/yourname' required><button>Save booking link</button></form><ul>{link_rows or '<li class=muted>No booking link saved yet.</li>'}</ul></section></div>
     <section><h2>Meetings this week</h2><table><tr><th>Meeting</th><th>Starts</th><th>Type</th><th>Status</th></tr>{event_rows or '<tr><td colspan=4>No meetings booked yet</td></tr>'}</table></section>"""
-    return page(body)
+    return page(body, "/calendar")
 
 @router.post("/calendar/events")
 def add_calendar_event(title:str=Form(...), starts_at:str=Form(...), ends_at:str=Form(""), kind:str=Form("meeting"), notes:str=Form("")):
@@ -171,7 +171,7 @@ ZERO_HAWK_TRULYINBOX_WORKSPACE_ID=your_numeric_workspace_id</pre>
 def warmup_enable(account_id:int):
     try:
         # First-time enable is the documented action; resume is used after pause.
-        result = ti_request(f"/accounts/{account_id}/warmup/enable", "POST", {})
+        result = ti_request(f"/accounts/{account_id}/warmup/enable", "POST")
         log("trulyinbox_warmup_enable", str(account_id))
     except Exception as exc:
         raise HTTPException(502, str(exc))
@@ -180,7 +180,7 @@ def warmup_enable(account_id:int):
 @router.post("/warmup/{account_id}/pause")
 def warmup_pause(account_id:int):
     try:
-        ti_request(f"/accounts/{account_id}/warmup/pause", "POST", {})
+        ti_request(f"/accounts/{account_id}/warmup/pause", "POST")
         log("trulyinbox_warmup_pause", str(account_id))
     except Exception as exc:
         raise HTTPException(502, str(exc))
