@@ -1,4 +1,5 @@
 from __future__ import annotations
+from .config import env_value
 
 import os
 import re
@@ -8,9 +9,14 @@ from urllib.parse import urlsplit
 
 
 def db_path() -> Path:
-    home = Path(os.getenv("OPENPROSPECT_HOME", Path.home() / ".openprospect"))
+    configured = env_value("ZERO_HAWK_HOME")
+    legacy_home = Path.home() / ".openprospect"
+    home = Path(configured) if configured else (legacy_home if legacy_home.exists() else Path.home() / ".zero-hawk")
     home.mkdir(parents=True, exist_ok=True)
-    return home / "openprospect.db"
+    legacy_db = home / "openprospect.db"
+    current_db = home / "zero-hawk.db"
+    # Continue using an existing database in-place; fresh installs get a branded filename.
+    return legacy_db if legacy_db.exists() else current_db
 
 
 def connect():
@@ -51,7 +57,7 @@ def connect():
       evidence_url TEXT DEFAULT '',observed_at TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE);
     """)
-    # Additive migration for databases created by earlier OpenProspect releases.
+    # Additive migration for databases created by earlier Zero Hawk releases.
     columns = {row["name"] for row in c.execute("PRAGMA table_info(companies)")}
     for name in ("phone", "email", "socials"):
         if name not in columns:

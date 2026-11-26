@@ -1,3 +1,4 @@
+from .config import env_value
 import argparse, os, webbrowser
 from dotenv import load_dotenv
 import uvicorn
@@ -13,8 +14,8 @@ def main():
     parser.add_argument("--limit", type=int, default=5, help="Maximum companies to profile in one run cycle")
     args = parser.parse_args()
     if args.command == "dashboard":
-        host = os.getenv("OPENPROSPECT_HOST", "127.0.0.1")
-        port = int(os.getenv("OPENPROSPECT_PORT", "5555"))
+        host = env_value("OPENPROSPECT_HOST", "127.0.0.1")
+        port = int(env_value("OPENPROSPECT_PORT", "5555"))
         if host not in {"127.0.0.1", "::1", "localhost"}:
             parser.error("Dashboard host must be loopback-only (127.0.0.1, ::1 or localhost).")
         from .app import app

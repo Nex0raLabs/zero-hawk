@@ -20,7 +20,7 @@ def train_page():
     bullets = lambda key: ", ".join(data.get(key, [])) or "Not found yet"
     banned_phrases = "\\n".join(data.get("banned_phrases", []))
     return HTMLResponse(f"""<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Train · OpenProspect</title><style>body{{font:15px system-ui;max-width:900px;margin:30px auto;padding:0 18px;background:#0d1117;color:#e6edf3}}
+    <title>Train · Zero Hawk</title><style>body{{font:15px system-ui;max-width:900px;margin:30px auto;padding:0 18px;background:#0d1117;color:#e6edf3}}
     section{{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:18px;margin:16px 0}}
     input,textarea,button{{box-sizing:border-box;width:100%;padding:11px;margin:6px 0;border-radius:8px;border:1px solid #30363d;background:#0d1117;color:inherit}}
     button{{background:#238636;border:0;cursor:pointer;font-weight:700}}a{{color:#58a6ff}}</style></head><body>

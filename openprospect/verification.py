@@ -29,11 +29,11 @@ def _smtp_check(mx_host: str, address: str, timeout: float = 5.0) -> dict[str, A
     try:
         server.connect(mx_host, 25)
         server.ehlo_or_helo_if_needed()
-        server.mail("probe@openprospect.invalid")
+        server.mail("probe@zero-hawk.invalid")
         target_code, target_message = server.rcpt(address)
         server.rset()
         random_address = f"op-{secrets.token_hex(8)}@{address.rsplit('@', 1)[1]}"
-        server.mail("probe@openprospect.invalid")
+        server.mail("probe@zero-hawk.invalid")
         random_code, random_message = server.rcpt(random_address)
         return {
             "target_accepted": 200 <= target_code < 300,

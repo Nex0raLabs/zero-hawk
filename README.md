@@ -101,10 +101,10 @@ Open **Command Prompt** (CMD), then run each command separately:
 ```cmd
 cd %USERPROFILE%
 git clone https://github.com/Nex0raLabs/zero-hawk.git
-cd openprospect
+cd zero-hawk
 ```
 
-> The repository is still named `openprospect` on GitHub. The product inside it is now **Zero Hawk**. You can rename the GitHub repository later; GitHub redirects old clone URLs after a repository rename.
+> The repository and product are named **ZERO HAWK**.
 
 ### 2. Launch Zero Hawk
 
@@ -164,9 +164,9 @@ ollama pull llama3.2
 3. In Zero Hawk **Settings**, select Ollama, or set these values in your private `.env`:
 
 ```env
-OPENPROSPECT_AI_PROVIDER=ollama
-OPENPROSPECT_AI_MODEL=llama3.2
-OPENPROSPECT_AI_BASE_URL=http://localhost:11434/v1
+ZERO_HAWK_AI_PROVIDER=ollama
+ZERO_HAWK_AI_MODEL=llama3.2
+ZERO_HAWK_AI_BASE_URL=http://localhost:11434/v1
 ```
 
 The model runs on your computer. Performance depends on your hardware and the model you download.
@@ -193,9 +193,9 @@ A compatible desktop/agent client can launch the server using the Python executa
 {
   "mcpServers": {
     "zero-hawk": {
-      "command": "C:\\Users\\YOUR_USER\\openprospect\\.venv\\Scripts\\python.exe",
+      "command": "C:\\Users\\YOUR_USER\\zero-hawk\\.venv\\Scripts\\python.exe",
       "args": ["-m", "openprospect.mcp_server"],
-      "cwd": "C:\\Users\\YOUR_USER\\openprospect"
+      "cwd": "C:\\Users\\YOUR_USER\\zero-hawk"
     }
   }
 }
@@ -205,7 +205,7 @@ Replace `YOUR_USER` with your Windows account folder. The current MCP tools cove
 
 ## 🛡️ Human control first
 
-- The background run command profiles saved companies and records signals; it does **not** run an autonomous send campaign.
+- Autopilot runs a configurable 15-minute-minimum heartbeat to profile saved companies and record signals; it does **not** run an autonomous send campaign. Its ON/OFF state and interval are saved locally.
 - Email delivery is optional and requires SMTP configuration.
 - A draft must be explicitly approved before it can be sent.
 - The send path checks the app's verified-recipient status, suppression list and HTTPS unsubscribe configuration.
@@ -217,7 +217,7 @@ Use a test mailbox and contacts you control before any real sending. Follow the 
 
 ## Commands
 
-The primary command is now `zero-hawk`. The previous `openprospect` command remains as a compatibility alias.
+The primary command is now `zero-hawk`. The internal Python package keeps its legacy import path for compatibility. Environment settings now use the `ZERO_HAWK_*` prefix; existing `OPENPROSPECT_*` variables continue to work as fallbacks.
 
 ```cmd
 zero-hawk dashboard
@@ -259,7 +259,7 @@ Install Python 3.11+ and enable the Python Launcher / PATH option.
 Activate the virtual environment from the project folder, then run `python -m pip install -e ".[dev,mcp]"` again.
 
 **Port 5555 is already in use**  
-Close the other Zero Hawk process first. If you intentionally need another local port, set `OPENPROSPECT_PORT` in `.env` and restart.
+Close the other Zero Hawk process first. If you intentionally need another local port, set `ZERO_HAWK_PORT` in `.env` and restart.
 
 **Discovery returns few businesses**  
 OpenStreetMap is community-maintained. Try a broader place/category or add companies manually; results are not guaranteed to be complete.

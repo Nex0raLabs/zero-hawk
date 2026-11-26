@@ -14,7 +14,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
 
-USER_AGENT = "OpenProspect/0.2 (+https://github.com/linkto254-bot/openprospect)"
+USER_AGENT = "Zero Hawk/0.3 (+https://github.com/Nex0raLabs/zero-hawk)"
 MAX_BYTES = 1_500_000
 PAGE_LIMIT = 3
 
@@ -192,7 +192,8 @@ def train_website(url: str, home: str | Path | None = None) -> dict[str, Any]:
         except Exception as exc:
             pages.append({"url": candidate, "blocked": True, "error": str(exc), "text": ""})
     result = _extract_training(pages, url)
-    home_path = Path(home) if home else Path.home() / ".openprospect"
+    from .db import db_path
+    home_path = Path(home) if home else db_path().parent
     home_path.mkdir(parents=True, exist_ok=True)
     target = home_path / "company-training.json"
     target.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -201,7 +202,8 @@ def train_website(url: str, home: str | Path | None = None) -> dict[str, Any]:
 
 
 def load_training(home: str | Path | None = None) -> dict[str, Any]:
-    target = (Path(home) if home else Path.home() / ".openprospect") / "company-training.json"
+    from .db import db_path
+    target = (Path(home) if home else db_path().parent) / "company-training.json"
     if not target.exists():
         return {}
     return json.loads(target.read_text(encoding="utf-8"))
@@ -215,7 +217,8 @@ def save_training(payload: dict[str, Any], home: str | Path | None = None) -> di
     for key in allowed:
         if key in payload:
             current[key] = payload[key]
-    target = (Path(home) if home else Path.home() / ".openprospect") / "company-training.json"
+    from .db import db_path
+    target = (Path(home) if home else db_path().parent) / "company-training.json"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(json.dumps(current, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     return current

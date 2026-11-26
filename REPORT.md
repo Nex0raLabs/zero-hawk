@@ -1,4 +1,19 @@
-# OpenProspect QA and Release Audit
+# Zero Hawk QA and Release Audit
+
+> **Historical audit note:** The detailed matrix below records the earlier pre-combination audit. It is retained as project history and is not the release test result for the combined dashboard build. See the current validation summary immediately below.
+
+## Combined build validation (2026-11-26)
+
+- Python compile check: passed (`python -m compileall -q openprospect`).
+- Editable package install using the already available build tools: passed (`python -m pip install -e ".[dev]" --no-build-isolation --no-deps`). A normal isolated install could not download build dependencies in this offline runner; fresh-machine install must still be checked on the user's PC.
+- Automated tests: **54 passed** (`python -m pytest -q`).
+- Dashboard navigation smoke test: all 17 primary sidebar routes returned HTTP 200 after local-token authentication.
+- CLI smoke test: `zero-hawk --help` returned the expected command list.
+- Autopilot: ON/OFF, saved configuration, 15-minute minimum interval, startup recovery and safe shutdown covered by regression tests.
+- Remaining live checks: fresh Windows `run.bat` installation, live OpenStreetMap requests, actual AI provider login, SMTP/IMAP mailbox delivery and reply sync, WhatsApp pairing/send/receive, and Vercel/remote deployment. These require the user's machine, credentials, devices or external services and are not represented as passed.
+- Product scope: Autopilot currently profiles saved public websites and records signals only. It does not yet autonomously discover prospects, enrich decision-makers, compose full campaign sequences, classify replies or send outreach.
+
+---
 
 **Audit date:** 2026-11-26  
 **Audited ref:** `feat/full-platform-roadmap`  

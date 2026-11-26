@@ -13,6 +13,7 @@ htmlcov/
 .DS_Store
 
 # Local application state and credentials
+.zero-hawk/
 .openprospect/
 data/
 *.token

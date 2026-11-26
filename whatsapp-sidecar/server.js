@@ -11,7 +11,7 @@ if(!TOKEN) { console.error('WA_SIDECAR_TOKEN is required'); process.exit(1); }
 async function connect(){
  const {state:auth,saveCreds}=await useMultiFileAuthState(AUTH_DIR);
  const {version}=await fetchLatestBaileysVersion();
- sock=makeWASocket({version,auth,logger:pino({level:'silent'}),printQRInTerminal:false,browser:['OpenProspect','Chrome','1.0.0']});
+ sock=makeWASocket({version,auth,logger:pino({level:'silent'}),printQRInTerminal:false,browser:['Zero Hawk','Chrome','1.0.0']});
  sock.ev.on('creds.update',saveCreds);
  sock.ev.on('connection.update',u=>{
   if(u.connection==='open'){state='connected';lastError='';}
@@ -51,4 +51,4 @@ const server=http.createServer(async(req,res)=>{
   return respond(res,404,{error:'not found'});
  }catch(e){lastError=e.message;return respond(res,500,{error:e.message});}
 });
-server.listen(PORT,'127.0.0.1',()=>console.log('OpenProspect WhatsApp sidecar on 127.0.0.1:'+PORT));
+server.listen(PORT,'127.0.0.1',()=>console.log('Zero Hawk WhatsApp sidecar on 127.0.0.1:'+PORT));

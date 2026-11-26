@@ -24,7 +24,7 @@ PRESETS = {
 
 _LAST_REQUEST = 0.0
 _REQUEST_LOCK = threading.Lock()
-USER_AGENT = "OpenProspect/0.2 (free local-first business discovery)"
+USER_AGENT = "Zero Hawk/0.2 (free local-first business discovery)"
 
 
 def _polite_pause() -> None:

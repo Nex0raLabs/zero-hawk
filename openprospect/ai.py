@@ -1,4 +1,5 @@
 from __future__ import annotations
+from .config import env_value
 
 import json
 import os
@@ -33,11 +34,11 @@ def save_provider_settings(provider: str, model: str = "", base_url: str = "") -
 
 
 def _setting(name: str, env_name: str, default: str = "") -> str:
-    return str(_local_settings().get(name) or os.getenv(env_name, default))
+    return str(_local_settings().get(name) or env_value(env_name, default))
 
 
 def provider_name() -> str:
-    return _setting("provider", "OPENPROSPECT_AI_PROVIDER", "ollama").strip().lower()
+    return _setting("provider", "ZERO_HAWK_AI_PROVIDER", "ollama").strip().lower()
 
 
 def provider_status() -> dict[str, Any]:
@@ -49,12 +50,12 @@ def provider_status() -> dict[str, Any]:
         command = shutil.which("codex")
         return {"provider": "codex", "connected": False, "status": "Installed; not yet tested" if command else "Not connected", "fix": "Install Codex CLI and sign in with your existing ChatGPT account."}
     if provider == "ollama":
-        base = os.getenv("OPENPROSPECT_AI_BASE_URL", "http://localhost:11434/v1").rstrip("/")
-        model = os.getenv("OPENPROSPECT_AI_MODEL", "llama3.2")
+        base = env_value("ZERO_HAWK_AI_BASE_URL", "http://localhost:11434/v1").rstrip("/")
+        model = env_value("ZERO_HAWK_AI_MODEL", "llama3.2")
         return {"provider": provider, "connected": False, "status": "Not connected", "fix": f"Start Ollama, pull {model}, then test the connection at {base}."}
     if provider in {"anthropic", "openai-compatible"}:
-        key = os.getenv("OPENPROSPECT_AI_API_KEY", "")
-        env_base = "ANTHROPIC_BASE_URL" if provider == "anthropic" else "OPENPROSPECT_AI_BASE_URL"
+        key = env_value("ZERO_HAWK_AI_API_KEY", "")
+        env_base = "ANTHROPIC_BASE_URL" if provider == "anthropic" else "ZERO_HAWK_AI_BASE_URL"
         default_base = "https://api.anthropic.com" if provider == "anthropic" else "https://api.openai.com/v1"
         base = _setting("base_url", env_base, default_base)
         return {"provider": provider, "connected": False, "status": "Configured; not yet tested" if key and base else "Not connected", "fix": "Set the provider URL, model and API key in your private .env file. Provider usage may cost money."}
@@ -88,22 +89,22 @@ def _ask_cli(provider: str, prompt: str, system: str) -> str:
 
 def ask_ai(prompt: str, system: str = "You are a helpful business research and outreach assistant.") -> str:
     provider = provider_name()
-    model = os.getenv("OPENPROSPECT_AI_MODEL", "")
-    key = os.getenv("OPENPROSPECT_AI_API_KEY", "")
-    base = os.getenv("OPENPROSPECT_AI_BASE_URL", "https://api.openai.com/v1").rstrip("/")
+    model = env_value("ZERO_HAWK_AI_MODEL", "")
+    key = env_value("ZERO_HAWK_AI_API_KEY", "")
+    base = env_value("ZERO_HAWK_AI_BASE_URL", "https://api.openai.com/v1").rstrip("/")
 
     if provider in {"claude-code", "claude", "codex", "codex-cli"}:
         return _ask_cli(provider, prompt, system)
 
     if provider == "ollama":
-        base = os.getenv("OPENPROSPECT_AI_BASE_URL", "http://localhost:11434/v1").rstrip("/")
+        base = env_value("ZERO_HAWK_AI_BASE_URL", "http://localhost:11434/v1").rstrip("/")
         model = model or "llama3.2"
 
     if provider == "anthropic":
         base = _setting("base_url", "ANTHROPIC_BASE_URL", "https://api.anthropic.com").rstrip("/")
         model = model or "claude-3-5-haiku-latest"
         if not key:
-            raise RuntimeError("Set OPENPROSPECT_AI_API_KEY for the Anthropic provider.")
+            raise RuntimeError("Set ZERO_HAWK_AI_API_KEY for the Anthropic provider.")
         payload = {"model": model, "max_tokens": 1200, "system": system, "messages": [{"role": "user", "content": prompt}]}
         headers = {"x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json"}
         req = urllib.request.Request(base + "/v1/messages", data=json.dumps(payload).encode(), headers=headers, method="POST")
@@ -112,7 +113,7 @@ def ask_ai(prompt: str, system: str = "You are a helpful business research and o
         return "".join(x.get("text", "") for x in data.get("content", []) if x.get("type") == "text")
 
     if not model:
-        raise RuntimeError("Set OPENPROSPECT_AI_MODEL in .env before using AI.")
+        raise RuntimeError("Set ZERO_HAWK_AI_MODEL in .env before using AI.")
     if provider not in {"ollama", "openai-compatible"}:
         raise RuntimeError(f"Unsupported AI provider: {provider}")
     payload = {"model": model, "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}]}
@@ -127,5 +128,5 @@ def ask_ai(prompt: str, system: str = "You are a helpful business research and o
 
 def test_ai_connection() -> dict[str, Any]:
     provider = provider_name()
-    answer = ask_ai("Reply with exactly: OPENPROSPECT CONNECTION OK", system="You are testing an AI provider connection. Follow the user instruction exactly.")
+    answer = ask_ai("Reply with exactly: ZERO HAWK CONNECTION OK", system="You are testing an AI provider connection. Follow the user instruction exactly.")
     return {"provider": provider, "connected": bool(answer.strip()), "response": answer.strip()[:300]}

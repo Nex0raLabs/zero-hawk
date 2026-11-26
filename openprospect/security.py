@@ -29,12 +29,12 @@ def get_dashboard_token() -> str:
 
 def login_page() -> str:
     return """<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>OpenProspect · Sign in</title><style>
+    <title>Zero Hawk · Sign in</title><style>
     body{font:15px system-ui;background:#0d1117;color:#e6edf3;display:grid;place-items:center;min-height:90vh;margin:0}
     main{width:min(420px,calc(100% - 40px));background:#161b22;border:1px solid #30363d;border-radius:16px;padding:24px}
     input,button{box-sizing:border-box;width:100%;padding:12px;margin:8px 0;border-radius:8px;border:1px solid #30363d;background:#0d1117;color:inherit}
     button{background:#238636;border:0;font-weight:700;cursor:pointer}small{color:#8b949e}</style></head><body>
-    <main><h1>◈ OpenProspect</h1><p>Private local dashboard. Paste your dashboard token or open the private link printed by the command.</p>
+    <main><h1>◈ Zero Hawk</h1><p>Private local dashboard. Paste your dashboard token or open the private link printed by the command.</p>
     <form id="login"><input id="token" type="password" autocomplete="current-password" placeholder="Dashboard token" required>
     <button>Sign in</button></form><p id="status"><small>Your token stays in this browser session and is exchanged for a local-only session cookie.</small></p></main>
     <script>
@@ -42,7 +42,7 @@ def login_page() -> str:
     async function signIn(token){status.textContent='Checking token…';
       const response=await fetch('/auth/exchange',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({token})});
       if(response.ok){history.replaceState(null,'',location.pathname);location.replace('/');}
-      else status.textContent='Token not accepted. Run openprospect dashboard to print a fresh private link.';
+      else status.textContent='Token not accepted. Run zero-hawk dashboard to print a fresh private link.';
     }
     document.getElementById('login').addEventListener('submit',e=>{e.preventDefault();signIn(field.value);});
     const params=new URLSearchParams(location.hash.slice(1));const linkToken=params.get('token');
@@ -56,7 +56,7 @@ def install_security(app: FastAPI) -> None:
     async def local_dashboard_guard(request: Request, call_next):
         host = request.url.hostname or ""
         if host not in {"127.0.0.1", "::1", "localhost"}:
-            return JSONResponse({"detail": "OpenProspect only accepts local connections."}, status_code=403)
+            return JSONResponse({"detail": "Zero Hawk only accepts local connections."}, status_code=403)
 
         if request.url.path == "/auth/exchange" and request.method == "POST":
             try:
@@ -68,7 +68,7 @@ def install_security(app: FastAPI) -> None:
                 return JSONResponse({"detail": "Invalid dashboard token."}, status_code=401)
             response = JSONResponse({"ok": True})
             response.set_cookie(
-                "openprospect_session", get_dashboard_token(),
+                "zero_hawk_session", get_dashboard_token(),
                 httponly=True, secure=False, samesite="strict", path="/",
                 max_age=60 * 60 * 24 * 30,
             )
@@ -76,7 +76,7 @@ def install_security(app: FastAPI) -> None:
 
         if request.url.path == "/auth/logout" and request.method == "POST":
             response = RedirectResponse("/", status_code=303)
-            response.delete_cookie("openprospect_session", path="/", samesite="strict")
+            response.delete_cookie("zero_hawk_session", path="/", samesite="strict")
             return response
 
         if request.url.path == "/unsubscribe" and request.method in {"GET", "POST"}:
@@ -90,7 +90,7 @@ def install_security(app: FastAPI) -> None:
                 return await call_next(request)
             return JSONResponse({"detail": "Invalid sidecar authentication."}, status_code=401)
 
-        session = request.cookies.get("openprospect_session", "")
+        session = request.cookies.get("zero_hawk_session", "")
         if not hmac.compare_digest(session, get_dashboard_token()):
             if request.method in {"GET", "HEAD"}:
                 return HTMLResponse(login_page(), status_code=200)

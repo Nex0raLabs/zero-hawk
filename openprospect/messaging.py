@@ -1,5 +1,6 @@
 """Real SMTP delivery and IMAP synchronization. Credentials are read only from environment variables."""
 from __future__ import annotations
+from .config import env_value
 import email, imaplib, os, smtplib, ssl, uuid, datetime
 from email.message import EmailMessage
 from email.utils import formatdate, make_msgid
@@ -7,8 +8,8 @@ from .db import connect, is_suppressed, log
 from .verification import is_deliverable
 
 def email_status():
-    required=("OPENPROSPECT_SMTP_HOST","OPENPROSPECT_SMTP_USER","OPENPROSPECT_SMTP_PASSWORD","OPENPROSPECT_FROM_EMAIL")
-    missing=[k for k in required if not os.getenv(k)]
+    required=("ZERO_HAWK_SMTP_HOST","ZERO_HAWK_SMTP_USER","ZERO_HAWK_SMTP_PASSWORD","ZERO_HAWK_FROM_EMAIL")
+    missing=[k for k in required if not env_value(k)]
     return {"configured":not missing,"missing":missing,"provider":"SMTP"}
 
 def send_email(*,to:str,subject:str,body:str,unsubscribe_url:str,verification:dict,approved:bool=False):
@@ -18,26 +19,28 @@ def send_email(*,to:str,subject:str,body:str,unsubscribe_url:str,verification:di
     if not is_deliverable(verification) or verification.get("address","").lower()!=to.lower():
         raise RuntimeError("Recipient must have a current verified, non-catch-all email result.")
     if is_suppressed(to): raise RuntimeError("Recipient is on the suppression list.")
-    daily_cap = max(1, min(int(os.getenv("OPENPROSPECT_DAILY_SEND_LIMIT", "25")), 100))
+    from .sendpolicy import check_send_allowed
+    check_send_allowed()
+    daily_cap = max(1, min(int(env_value("ZERO_HAWK_DAILY_SEND_LIMIT", "25")), 100))
     with connect() as c:
         sent_today = c.execute("SELECT COUNT(*) FROM activity WHERE event=? AND date(created_at)=date(?)", ("email_sent", datetime.date.today().isoformat())).fetchone()[0]
     if sent_today >= daily_cap:
         raise RuntimeError("Daily sending limit reached (" + str(daily_cap) + ").")
-    msg=EmailMessage(); msg["From"]=os.environ["OPENPROSPECT_FROM_EMAIL"]; msg["To"]=to
+    msg=EmailMessage(); msg["From"]=env_value("ZERO_HAWK_FROM_EMAIL"); msg["To"]=to
     msg["Subject"]=subject; msg["Date"]=formatdate(localtime=True); msg["Message-ID"]=make_msgid()
     msg["List-Unsubscribe"]=f"<{unsubscribe_url}>"; msg["List-Unsubscribe-Post"]="List-Unsubscribe=One-Click"
     msg.set_content(body.rstrip()+"\n\nTo stop receiving these messages, use the unsubscribe link: "+unsubscribe_url)
-    host=os.environ["OPENPROSPECT_SMTP_HOST"]; port=int(os.getenv("OPENPROSPECT_SMTP_PORT","587"))
+    host=env_value("ZERO_HAWK_SMTP_HOST"); port=int(env_value("ZERO_HAWK_SMTP_PORT","587"))
     with smtplib.SMTP(host,port,timeout=20) as server:
         server.ehlo(); server.starttls(context=ssl.create_default_context()); server.ehlo()
-        server.login(os.environ["OPENPROSPECT_SMTP_USER"],os.environ["OPENPROSPECT_SMTP_PASSWORD"])
+        server.login(env_value("ZERO_HAWK_SMTP_USER"),env_value("ZERO_HAWK_SMTP_PASSWORD"))
         server.send_message(msg)
     log("email_sent",f"{to} | {subject}")
     return {"sent":True,"message_id":msg["Message-ID"]}
 
 def imap_status():
-    keys=("OPENPROSPECT_IMAP_HOST","OPENPROSPECT_IMAP_USER","OPENPROSPECT_IMAP_PASSWORD")
-    missing=[k for k in keys if not os.getenv(k)]
+    keys=("ZERO_HAWK_IMAP_HOST","ZERO_HAWK_IMAP_USER","ZERO_HAWK_IMAP_PASSWORD")
+    missing=[k for k in keys if not env_value(k)]
     return {"configured":not missing,"missing":missing}
 
 def sync_imap(limit:int=50):
@@ -45,12 +48,12 @@ def sync_imap(limit:int=50):
     ensure_schema()
     cfg=imap_status()
     if not cfg["configured"]: raise RuntimeError("IMAP is not configured: "+", ".join(cfg["missing"]))
-    host=os.environ["OPENPROSPECT_IMAP_HOST"]; port=int(os.getenv("OPENPROSPECT_IMAP_PORT","993"))
+    host=env_value("ZERO_HAWK_IMAP_HOST"); port=int(env_value("ZERO_HAWK_IMAP_PORT","993"))
     box=imaplib.IMAP4_SSL(host,port,ssl_context=ssl.create_default_context())
     added=0
     try:
-        box.login(os.environ["OPENPROSPECT_IMAP_USER"],os.environ["OPENPROSPECT_IMAP_PASSWORD"])
-        box.select(os.getenv("OPENPROSPECT_IMAP_FOLDER","INBOX"),readonly=True)
+        box.login(env_value("ZERO_HAWK_IMAP_USER"),env_value("ZERO_HAWK_IMAP_PASSWORD"))
+        box.select(env_value("ZERO_HAWK_IMAP_FOLDER","INBOX"),readonly=True)
         typ,data=box.search(None,"UNSEEN")
         if typ!="OK": raise RuntimeError("IMAP search failed")
         for uid in data[0].split()[-max(1,min(limit,200)):]:

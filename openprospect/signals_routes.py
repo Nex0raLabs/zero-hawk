@@ -25,7 +25,7 @@ def signals_page():
     )
     raw = html.escape(json.dumps(rules, indent=2, ensure_ascii=False))
     return HTMLResponse(f"""<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Signals · OpenProspect</title><style>body{{font:15px system-ui;max-width:1100px;margin:30px auto;padding:0 18px;background:#0d1117;color:#e6edf3}}
+    <title>Signals · Zero Hawk</title><style>body{{font:15px system-ui;max-width:1100px;margin:30px auto;padding:0 18px;background:#0d1117;color:#e6edf3}}
     section{{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:18px;margin:16px 0}}
     textarea,button{{box-sizing:border-box;width:100%;padding:12px;margin:8px 0;border-radius:8px;border:1px solid #30363d;background:#0d1117;color:inherit}}
     textarea{{min-height:360px;font:13px ui-monospace,monospace}}button{{background:#238636;border:0;cursor:pointer;font-weight:700}}

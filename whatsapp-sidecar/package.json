@@ -2,7 +2,7 @@
   "name": "openprospect-whatsapp-sidecar",
   "version": "0.1.0",
   "private": true,
-  "description": "Optional WhatsApp Web sidecar for OpenProspect",
+  "description": "Optional WhatsApp Web sidecar for Zero Hawk",
   "scripts": {
     "start": "node server.js"
   },

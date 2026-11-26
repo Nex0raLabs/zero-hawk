@@ -18,10 +18,10 @@ def test_unified_conversation_storage(monkeypatch,tmp_path):
     assert count==2
 
 def test_mailbox_connection_status_is_honest(monkeypatch):
-    for key in ("OPENPROSPECT_SMTP_HOST","OPENPROSPECT_SMTP_USER","OPENPROSPECT_SMTP_PASSWORD","OPENPROSPECT_FROM_EMAIL","OPENPROSPECT_IMAP_HOST","OPENPROSPECT_IMAP_USER","OPENPROSPECT_IMAP_PASSWORD"):
+    for key in ("ZERO_HAWK_SMTP_HOST","ZERO_HAWK_SMTP_USER","ZERO_HAWK_SMTP_PASSWORD","ZERO_HAWK_FROM_EMAIL","ZERO_HAWK_IMAP_HOST","ZERO_HAWK_IMAP_USER","ZERO_HAWK_IMAP_PASSWORD"):
         monkeypatch.delenv(key,raising=False)
     assert email_status()["configured"] is False
-    assert "OPENPROSPECT_SMTP_HOST" in email_status()["missing"]
+    assert "ZERO_HAWK_SMTP_HOST" in email_status()["missing"]
     assert imap_status()["configured"] is False
 
 def test_privacy_checklist_is_explicit():

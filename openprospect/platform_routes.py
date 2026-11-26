@@ -1,4 +1,5 @@
 """Dashboard surfaces for real mailbox, inbox, automation and compliance features."""
+from .config import env_value
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from .db import connect, list_activity, log, is_suppressed, add_suppression
@@ -18,7 +19,7 @@ def inbox():
     ensure_schema(); rows=list_conversations()
     body="".join(f"<section><b>{r['channel'].upper()} · {r['contact_address']}</b><p>{r['subject']}</p><p>{r['last_message'][:800]}</p><small>{r['updated_at']} · {r['status']}</small></section>" for r in rows)
     s=email_status(); m=imap_status()
-    body+=f"<section><h2>Mailbox connections</h2><p>SMTP: {'Configured' if s['configured'] else 'Not connected'} · IMAP: {'Configured' if m['configured'] else 'Not connected'}</p><p>Configure OPENPROSPECT_SMTP_* and OPENPROSPECT_IMAP_* environment variables, then restart.</p><form method='post' action='/inbox/sync'><button>Sync IMAP now</button></form></section>"
+    body+=f"<section><h2>Mailbox connections</h2><p>SMTP: {'Configured' if s['configured'] else 'Not connected'} · IMAP: {'Configured' if m['configured'] else 'Not connected'}</p><p>Configure ZERO_HAWK_SMTP_* and ZERO_HAWK_IMAP_* environment variables, then restart.</p><form method='post' action='/inbox/sync'><button>Sync IMAP now</button></form></section>"
     return page("Unified conversations",body or "<p>No conversations yet. Connect IMAP or the WhatsApp sidecar to receive messages.</p>")
 
 @router.post("/inbox/sync",response_class=HTMLResponse)
@@ -30,13 +31,49 @@ def inbox_sync():
 @router.get("/controls",response_class=HTMLResponse)
 def controls():
     state=loop_status()
-    return page("Autonomous controls",f"<section><p>Status: <b>{'Running' if state['running'] else 'Paused'}</b></p><p>{state['mode']}</p><form method='post' action='/controls/start'><button>Start loop</button></form><form method='post' action='/controls/pause'><button class='secondary'>Pause loop</button></form><form method='post' action='/controls/run'><button class='secondary'>Run one cycle now</button></form></section><p class='warning'>The loop profiles public websites and records buying signals only. It never sends email or WhatsApp automatically.</p>")
+    enabled=state["enabled"]
+    status="ACTIVE" if enabled else "OFF"
+    color="var(--green)" if enabled else "var(--muted)"
+    last=state.get("last_completed") or "Not run yet"
+    body=f"""<section class='control-hero'>
+      <div style='display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap'>
+        <div><span class='pill' style='color:{color}'>● {status}</span><h2 style='margin:10px 0 2px'>Autopilot</h2>
+        <p class='muted'>Runs a safe research cycle automatically. You remain in control of every message.</p></div>
+        <form method='post' action='/controls/{'pause' if enabled else 'start'}'>
+          <button style='min-width:150px;background:{'var(--red)' if enabled else 'var(--green)'}'>{'Turn Autopilot OFF' if enabled else 'Turn Autopilot ON'}</button>
+        </form>
+      </div>
+      <div class='grid' style='margin-top:16px'>
+        <div class='card'><div class='lbl'>Heartbeat</div><div class='number'>15 min</div><div class='sub'>Minimum interval</div></div>
+        <div class='card'><div class='lbl'>Last cycle</div><div class='number' style='font-size:18px'>{state.get('last_processed',0)} profiled</div><div class='sub'>{last}</div></div>
+        <div class='card'><div class='lbl'>Batch size</div><div class='number'>{state['batch_size']}</div><div class='sub'>Companies per cycle</div></div>
+      </div>
+      <form method='post' action='/controls/configure' style='margin-top:16px'>
+        <label>Companies to profile per cycle</label><input type='number' name='batch_size' min='1' max='25' value='{state['batch_size']}'>
+        <label>Heartbeat interval</label><select name='interval_seconds'><option value='900' {'selected' if state['interval_seconds']==900 else ''}>Every 15 minutes</option><option value='1800' {'selected' if state['interval_seconds']==1800 else ''}>Every 30 minutes</option><option value='3600' {'selected' if state['interval_seconds']==3600 else ''}>Every hour</option><option value='21600' {'selected' if state['interval_seconds']==21600 else ''}>Every 6 hours</option></select>
+        <button class='secondary'>Save Autopilot settings</button>
+      </form>
+      <form method='post' action='/controls/run'><button class='secondary'>Run one cycle now</button></form>
+    </section>
+    <section><h2>What Autopilot does</h2><ul><li>Profiles saved public business websites</li><li>Captures evidence-backed website signals</li><li>Updates activity and research history</li><li>Respects the global send kill switch</li></ul><p class='warning'>Autopilot does not discover new prospects, generate campaigns, reply to inboxes, or send messages automatically. Outbound email and WhatsApp remain manual and approval-gated.</p></section>
+    <section><h2>Global send kill switch</h2><p>Outbound email is <b>{'PAUSED' if __import__('openprospect.sendpolicy',fromlist=['x']).is_paused() else 'available (approval-first)'}</b>.</p><form method='post' action='/controls/kill' class='inline'><button style='background:var(--red)'>Pause all sending</button></form> <form method='post' action='/controls/resume' class='inline'><button class='secondary'>Resume sending</button></form></section>"""
+    return page("Autonomous controls",body)
+
 @router.post("/controls/start")
 def controls_start():
-    start_loop();return RedirectResponse("/controls",303)
+    state=loop_status();start_loop(state['interval_seconds'],state['batch_size']);return RedirectResponse("/controls",303)
 @router.post("/controls/pause")
 def controls_pause():
     pause_loop();return RedirectResponse("/controls",303)
+@router.post("/controls/configure")
+def controls_configure(batch_size:int=Form(5),interval_seconds:int=Form(900)):
+    state=loop_status()
+    if state['enabled']:
+        pause_loop();start_loop(interval_seconds,batch_size)
+    else:
+        from .automation import _write_settings
+        _write_settings(interval_seconds=max(900,min(interval_seconds,86400)),batch_size=max(1,min(batch_size,25)))
+    return RedirectResponse("/controls",303)
 @router.post("/controls/run",response_class=HTMLResponse)
 def controls_run():
     result=run_once()
@@ -70,9 +107,9 @@ def send_approved_draft(draft_id:int):
         row=c.execute("SELECT drafts.*,contacts.email,contacts.email_status,contacts.verified_at FROM drafts JOIN contacts ON contacts.id=drafts.contact_id WHERE drafts.id=?",(draft_id,)).fetchone()
     if not row: raise HTTPException(404,"Draft or linked contact not found.")
     if row["status"]!="approved": raise HTTPException(400,"Approve the draft before sending.")
-    if row["email_status"]!="verified" or not row["verified_at"]: raise HTTPException(400,"Recipient must be verified in OpenProspect first.")
-    base=os.getenv("OPENPROSPECT_PUBLIC_BASE_URL","").rstrip("/")
-    if not base.startswith("https://"): raise HTTPException(400,"Set OPENPROSPECT_PUBLIC_BASE_URL to a public HTTPS unsubscribe endpoint before sending.")
+    if row["email_status"]!="verified" or not row["verified_at"]: raise HTTPException(400,"Recipient must be verified in Zero Hawk first.")
+    base=env_value("ZERO_HAWK_PUBLIC_BASE_URL","").rstrip("/")
+    if not base.startswith("https://"): raise HTTPException(400,"Set ZERO_HAWK_PUBLIC_BASE_URL to a public HTTPS unsubscribe endpoint before sending.")
     url=base+"/unsubscribe?email="+quote(row["email"])
     try:
         result=send_email(to=row["email"],subject=row["subject"],body=row["body"],unsubscribe_url=url,verification={"address":row["email"],"status":"verified","catch_all":False},approved=True)
@@ -83,12 +120,12 @@ def send_approved_draft(draft_id:int):
 @router.get("/unsubscribe",response_class=HTMLResponse)
 def unsubscribe(email:str):
     add_suppression(email,"Recipient used unsubscribe link")
-    return HTMLResponse("<h1>Unsubscribed</h1><p>This address has been added to the OpenProspect suppression list.</p>")
+    return HTMLResponse("<h1>Unsubscribed</h1><p>This address has been added to the Zero Hawk suppression list.</p>")
 
 @router.post("/unsubscribe",response_class=HTMLResponse)
 def unsubscribe_one_click(email:str=Form(...)):
     add_suppression(email,"Recipient used one-click email unsubscribe")
-    return HTMLResponse("<h1>Unsubscribed</h1><p>This address has been added to the OpenProspect suppression list.</p>")
+    return HTMLResponse("<h1>Unsubscribed</h1><p>This address has been added to the Zero Hawk suppression list.</p>")
 
 @router.post("/api/whatsapp/inbound")
 def whatsapp_inbound(payload:dict):

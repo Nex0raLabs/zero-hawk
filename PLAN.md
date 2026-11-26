@@ -1,6 +1,6 @@
-# OpenProspect implementation plan
+# Zero Hawk implementation plan
 
-> Independent implementation. Sellbird is used only as a feature reference; no Sellbird code, prompts, or assets are copied. OpenProspect remains AGPL-3.0.
+> Independent implementation. Sellbird is used only as a feature reference; no Sellbird code, prompts, or assets are copied. Zero Hawk remains AGPL-3.0.
 
 ## Initial audit (2026-11-25)
 
@@ -150,7 +150,7 @@
 
 ## Audit notes
 
-The recursive tree currently contains only the README, license, packaging/launcher files, one CI workflow, eight Python package modules, and one test module. There is no frontend build system, migrations folder, Docker configuration, changelog, playbook directory, or docs folder in OpenProspect's current tree.
+The recursive tree currently contains only the README, license, packaging/launcher files, one CI workflow, eight Python package modules, and one test module. There is no frontend build system, migrations folder, Docker configuration, changelog, playbook directory, or docs folder in Zero Hawk's current tree.
 
 Key implementation risks found during source review:
 - Dashboard routes currently have no private-token authentication or CSRF/origin protection.
