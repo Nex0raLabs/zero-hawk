@@ -101,10 +101,10 @@ Open **Command Prompt** (CMD), then run each command separately:
 ```cmd
 cd %USERPROFILE%
 git clone https://github.com/Nex0raLabs/zero-hawk.git
-cd openprospect
+cd zero-hawk
 ```
 
-> The repository is still named `openprospect` on GitHub. The product inside it is now **Zero Hawk**. You can rename the GitHub repository later; GitHub redirects old clone URLs after a repository rename.
+> The repository and product are named **ZERO HAWK**.
 
 ### 2. Launch Zero Hawk
 
@@ -193,9 +193,9 @@ A compatible desktop/agent client can launch the server using the Python executa
 {
   "mcpServers": {
     "zero-hawk": {
-      "command": "C:\\Users\\YOUR_USER\\openprospect\\.venv\\Scripts\\python.exe",
+      "command": "C:\\Users\\YOUR_USER\\zero-hawk\\.venv\\Scripts\\python.exe",
       "args": ["-m", "openprospect.mcp_server"],
-      "cwd": "C:\\Users\\YOUR_USER\\openprospect"
+      "cwd": "C:\\Users\\YOUR_USER\\zero-hawk"
     }
   }
 }
