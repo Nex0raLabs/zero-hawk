@@ -13,7 +13,9 @@ router = APIRouter()
 def e(v):
     return html.escape(str(v or ""), quote=True)
 
-def page(body, path="/setup"):
+def page(body, path=None):
+    if path is None:
+        path = "/warmup" if ("Email warmup" in body or "Mailbox health" in body) else ("/calendar" if "<h1>Calendar" in body else "/setup")
     return HTMLResponse(render_shell(body, path))
 
 def init_suite_db():
@@ -164,7 +166,7 @@ ZERO_HAWK_TRULYINBOX_WORKSPACE_ID=your_numeric_workspace_id</pre>
     for a in accounts:
         ident = a.get("id")
         status = a.get("warmupStatus","Unknown")
-        rows += f"<tr><td>{e(a.get('emailAddress','Unknown mailbox'))}</td><td>{e(a.get('provider',''))}</td><td>{e(a.get('status',''))}</td><td>{e(status)}</td><td><form class='inline' method='post' action='/warmup/{ident}/enable'><button>Start / resume</button></form> <form class='inline' method='post' action='/warmup/{ident}/pause'><button class='secondary'>Pause</button></form> <a href='/warmup/{ident}/health'>Health</a></td></tr>"
+        rows += f"<tr><td>{e(a.get('emailAddress','Unknown mailbox'))}</td><td>{e(a.get('provider',''))}</td><td>{e(a.get('status',''))}</td><td>{e(status)}</td><td><form class='inline' method='post' action='/warmup/{ident}/enable'><button>Enable warmup</button></form> <form class='inline' method='post' action='/warmup/{ident}/pause'><button class='secondary'>Pause</button></form> <a href='/warmup/{ident}/health'>Health</a></td></tr>"
     return page(f"<h1>Email warmup · TrulyInbox</h1><p class='muted'>{len(accounts)} mailboxes returned by your workspace.</p><section><table><tr><th>Mailbox</th><th>Provider</th><th>Connection</th><th>Warmup</th><th>Actions</th></tr>{rows or '<tr><td colspan=5>No mailboxes found. Connect one in TrulyInbox first.</td></tr>'}</table></section><p class='muted'>Warmup status is reported by TrulyInbox. Start/resume and pause actions call the live API and may be subject to plan limits.</p>")
 
 @router.post("/warmup/{account_id}/enable")
