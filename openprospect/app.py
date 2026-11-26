@@ -13,7 +13,34 @@ from urllib.parse import urlsplit
 
 app=FastAPI(title="Zero Hawk",version="0.2.0")
 CSS="""<style>
-:root{color-scheme:dark;--bg:#0b1020;--panel:#121b2b;--line:#27364b;--muted:#91a0b7;--accent:#6ea8fe;--green:#42d392}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#17243a 0,#0b1020 55%);color:#e8eef8;font:15px Inter,ui-sans-serif,system-ui,sans-serif}header{position:sticky;top:0;z-index:5;padding:17px 4%;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);background:#0b1020ef;backdrop-filter:blur(16px)}.brand{font-size:23px;font-weight:850;letter-spacing:-.8px}small,.muted{color:var(--muted)}nav{position:sticky;top:70px;z-index:4;padding:12px 4%;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--line);background:#0b1020ef;backdrop-filter:blur(16px)}nav a{padding:8px 12px;border:1px solid var(--line);border-radius:999px;font-size:13px}a{color:var(--accent);text-decoration:none}a:hover{color:#c2dcff}main{max-width:1440px;margin:30px auto;padding:0 26px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}.card,section{background:linear-gradient(145deg,#172337,#111a29);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 12px 36px #0003}h1{font-size:clamp(27px,4vw,38px);letter-spacing:-1.1px;margin:0 0 10px}.number{font-size:36px;font-weight:850;letter-spacing:-1px;margin-top:8px}input,textarea,select,button{font:inherit;padding:11px 12px;border-radius:9px;border:1px solid #34445d;background:#0b1321;color:#e8eef8;width:100%;margin:5px 0}textarea{min-height:100px}button{width:auto;background:#2563eb;border:0;font-weight:700;cursor:pointer;padding:11px 17px}button:hover{filter:brightness(1.12)}button.secondary{background:#334155}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto;font-size:14px}td,th{text-align:left;padding:11px;border-bottom:1px solid var(--line);vertical-align:top}form.inline{display:inline}.tag{color:var(--green)}.warning{color:#fbbf24}.muted{line-height:1.55}@media(max-width:650px){header{align-items:flex-start;flex-direction:column;gap:7px}nav{top:83px;overflow-x:auto;flex-wrap:nowrap}nav a{white-space:nowrap}main{padding:0 14px;margin:20px auto}.card,section{padding:16px}}
+:root{color-scheme:dark;--bg:#080d18;--surface:#101827;--surface2:#141f30;--line:#243247;--muted:#8d9bb0;--text:#edf3fb;--accent:#b7f34a;--blue:#80aaff;--green:#55d6a0;--amber:#f4c56a}
+*{box-sizing:border-box}body{margin:0;background:#080d18;color:var(--text);font:14px Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;line-height:1.55}
+a{color:var(--blue);text-decoration:none}a:hover{color:#c1d5ff}
+header{height:76px;position:fixed;inset:0 0 auto 0;z-index:10;background:#0b1220;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 28px}
+.brand{font-size:20px;font-weight:850;letter-spacing:-.7px}.brand img{filter:drop-shadow(0 0 12px #b7f34a33)}
+small,.muted{color:var(--muted)}header small{font-size:12px}
+nav{position:fixed;z-index:9;top:76px;bottom:0;left:0;width:236px;padding:22px 14px;background:#0b1220;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:5px;overflow:auto}
+nav:before{content:"WORKSPACE";font-size:10px;letter-spacing:1.5px;color:#66758b;font-weight:800;padding:0 13px 10px}
+nav a{display:flex;align-items:center;min-height:39px;padding:9px 13px;border-radius:9px;color:#aebbd0;font-size:13px;font-weight:600;border:1px solid transparent}
+nav a:hover{background:#172338;color:#fff;border-color:#25364d}
+main{margin:76px 0 0 236px;padding:34px clamp(20px,3vw,48px);max-width:1600px;min-height:calc(100vh - 76px)}
+h1{font-size:clamp(27px,3vw,34px);line-height:1.2;letter-spacing:-1px;margin:0 0 8px;font-weight:800}
+h2{font-size:17px;letter-spacing:-.3px;margin:0 0 13px}h3{font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:15px}
+.card,section{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:20px;margin:0 0 16px;box-shadow:0 8px 28px #0002}
+.card{min-height:112px;color:#9baac0;font-size:12px;font-weight:650;letter-spacing:.2px}
+.number{font-size:31px;font-weight:800;letter-spacing:-1px;color:#f2f6fc;margin-top:9px}
+input,textarea,select{font:inherit;padding:11px 13px;border-radius:8px;border:1px solid #2c3c53;background:#0b1321;color:#edf3fb;width:100%;margin:6px 0 13px;outline:none}
+input:focus,textarea:focus,select:focus{border-color:#789bd3;box-shadow:0 0 0 3px #80aaff18}
+label{font-size:12px;color:#aab8cc;font-weight:650}
+textarea{min-height:110px}
+button{font:inherit;width:auto;background:#b7f34a;color:#10170a;border:0;border-radius:8px;font-weight:800;cursor:pointer;padding:10px 16px;margin:5px 5px 5px 0}
+button:hover{filter:brightness(1.07)}button.secondary{background:#26364c;color:#dce7f5}
+table{width:100%;border-collapse:collapse;display:block;overflow-x:auto;font-size:13px}td,th{text-align:left;padding:12px 13px;border-bottom:1px solid #243247;vertical-align:top}th{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#8292a9;font-weight:800}tr:hover td{background:#ffffff04}
+form.inline{display:inline}.tag{color:var(--green)}.warning{color:var(--amber)}.muted{line-height:1.65}
+pre{background:#0a1220;border:1px solid var(--line);border-radius:9px;padding:15px;overflow:auto}
+@media(max-width:800px){header{height:64px;padding:0 16px}header>small{display:none}nav{top:64px;width:64px;padding:14px 7px}nav:before{display:none}nav a{font-size:0;justify-content:center;padding:9px 3px;overflow:hidden}nav a:after{content:attr(data-short);font-size:11px}main{margin:64px 0 0 64px;padding:24px 15px}.card,section{padding:15px}}
+@media(max-width:520px){nav{width:56px}main{margin-left:56px;padding:20px 11px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.number{font-size:25px}}
 </style>"""
 
 
@@ -24,7 +51,10 @@ def brand_icon():
 
 def esc(v):return html.escape(str(v or ""),quote=True)
 def shell(body):
- return f'<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Zero Hawk — Prospecting Workspace</title>{CSS}</head><body><header><div><div class="brand"><span style="display:inline-flex;align-items:center;gap:10px"><img src="/brand.svg" width="34" height="34" alt="" style="vertical-align:middle"><span>ZERO HAWK</span></span></div><small>Local-first prospecting command centre</small></div><small>Private workspace · Human approval · No automatic campaign sending</small></header><nav><a href="/">Today</a><a href="/train">Train</a><a href="/discover">Discover</a><a href="/signals">Signals</a><a href="/companies">Companies</a><a href="/contacts">Contacts</a><a href="/campaigns">Campaigns</a><a href="/drafts">Outbox</a><a href="/inbox">Inbox</a><a href="/controls">Controls</a><a href="/compliance">Compliance</a><a href="/connections">Connections</a><a href="/whatsapp">WhatsApp</a><a href="/activity">Activity</a><a href="/settings">Settings</a></nav><main>{body}</main></body></html>'
+ return f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ZERO HAWK — Command Centre</title>{CSS}</head><body>
+<header><div class="brand"><span style="display:inline-flex;align-items:center;gap:10px"><img src="/brand.svg" width="34" height="34" alt=""><span>ZERO HAWK</span></span></div><small>PRIVATE WORKSPACE&nbsp; · &nbsp;LOCAL-FIRST&nbsp; · &nbsp;HUMAN APPROVAL</small></header>
+<nav><a href="/">Overview</a><a href="/train">AI Training</a><a href="/discover">Discover</a><a href="/signals">Buying Signals</a><a href="/companies">Companies</a><a href="/contacts">Contacts</a><a href="/campaigns">Campaigns</a><a href="/drafts">Outbox</a><a href="/autopilot">Autopilot</a><a href="/activity">Activity</a><a href="/settings">Settings</a></nav>
+<main>{body}</main></body></html>'''
 
 def company_table(items):
  if not items:return "<p class='muted'>No companies yet. Add one or use Discover.</p>"
@@ -269,6 +299,33 @@ def ai_chat(payload:dict):
  try:return {"response":ask_ai(prompt)}
  except Exception as e:raise HTTPException(400,str(e))
 
+
+@app.get("/autopilot",response_class=HTMLResponse)
+def autopilot_page():
+ from .automation import loop_status
+ state=loop_status()
+ running=state["running"]
+ status="<span class='tag'>● ACTIVE</span>" if running else "<span class='muted'>● PAUSED</span>"
+ action="/autopilot/pause" if running else "/autopilot/start"
+ label="Pause autopilot" if running else "Enable autopilot"
+ return shell(f"""<h1>Autopilot</h1><p class='muted'>A controlled local heartbeat for website profiling and buying-signal refreshes.</p>
+ <section><h2>Automation status</h2><p style='font-size:22px;font-weight:800'>{status}</p><p>{esc(state['mode'])}</p>
+ <form method='post' action='{action}'><button>{label}</button></form></section>
+ <div class='grid'><div class='card'>HEARTBEAT INTERVAL<div class='number'>60m</div></div><div class='card'>OUTBOUND EMAIL<div class='number'>OFF</div></div><div class='card'>APPROVAL MODE<div class='number'>Manual</div></div></div>
+ <section><h2>What Autopilot does</h2><ul><li>Profiles saved company websites</li><li>Refreshes buying-signal observations</li><li>Writes automation events to Activity</li><li>Runs locally while ZERO HAWK is open</li></ul></section>
+ <section><h2>Safety boundaries</h2><p class='warning'>Autopilot does not send emails, approve drafts, or contact prospects. Every outbound message remains subject to human review and the existing verification and compliance checks.</p></section>""")
+
+@app.post("/autopilot/start")
+def autopilot_start():
+ from .automation import start_loop
+ start_loop(interval=3600)
+ return RedirectResponse("/autopilot",303)
+
+@app.post("/autopilot/pause")
+def autopilot_pause():
+ from .automation import pause_loop
+ pause_loop()
+ return RedirectResponse("/autopilot",303)
 
 # Keep the local dashboard private even when bound to loopback.
 from .security import install_security
