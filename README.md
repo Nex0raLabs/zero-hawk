@@ -100,7 +100,7 @@ Open **Command Prompt** (CMD), then run each command separately:
 
 ```cmd
 cd %USERPROFILE%
-git clone --branch feat/full-platform-roadmap https://github.com/linkto254-bot/openprospect.git
+git clone --branch feat/full-platform-roadmap https://github.com/Nex0raLabs/zero-hawk.git
 cd openprospect
 ```
 
