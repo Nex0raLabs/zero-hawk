@@ -94,9 +94,9 @@ Zero Hawk can be used one stage at a time. You do not need to connect an email a
 
 No API key is needed to install or open the dashboard. Ollama or another AI provider is optional.
 
-### 1. Clone the repository
+### Step 1 — Download ZERO HAWK
 
-Open **Command Prompt** (CMD), then run each command separately:
+Once Python and Git are installed, open **Command Prompt** (CMD) and run:
 
 ```cmd
 cd %USERPROFILE%
@@ -104,39 +104,38 @@ git clone https://github.com/Nex0raLabs/zero-hawk.git
 cd zero-hawk
 ```
 
-> The repository and product are named **ZERO HAWK**.
+### Step 2 — Install ZERO HAWK
 
-### 2. Launch Zero Hawk
-
-```cmd
-run.bat
-```
-
-The launcher creates a virtual environment, installs the application and its MCP extra, creates a starter `.env` file if needed, then starts the private dashboard.
-
-Open the private URL printed in the terminal. It normally uses:
-
-```text
-http://127.0.0.1:5555
-```
-
-Keep the private token link to yourself. Press **Ctrl+C** in the terminal to stop the server.
-
-### 3. If the launcher does not work
-
-Run these commands from inside the cloned folder:
+Run these commands in the same CMD window:
 
 ```cmd
-py -3 --version
-py -3 -m venv .venv
-.venv\Scripts\activate
+python -m venv .venv
+.venv\\Scripts\\activate
 python -m pip install --upgrade pip
-python -m pip install -e ".[dev,mcp]"
-copy .env.example .env
+pip install -e .
+```
+
+This creates an isolated Python environment and installs ZERO HAWK with its command-line launcher.
+
+### Step 3 — Open your dashboard
+
+Run:
+
+```cmd
 zero-hawk dashboard
 ```
 
-If `py -3 --version` reports that Python is missing, install Python 3.11+ from [python.org](https://www.python.org/downloads/windows/) and enable **Add Python to PATH** during setup. Reopen CMD after installation.
+ZERO HAWK starts locally and prints a private dashboard link in CMD. Open that link in your browser. Keep the full private link secret. Press **Ctrl+C** in CMD to stop the dashboard.
+
+The default dashboard address is `http://127.0.0.1:5555`. The private token is included in the link printed by the application.
+
+### Optional — One-click launch
+
+After the first installation, you can also run `run.bat` from the project folder. It checks the environment, installs the optional MCP extra and starts the dashboard.
+
+If Windows does not recognize `python`, install Python 3.11+ from [python.org](https://www.python.org/downloads/windows/), enable **Add Python to PATH**, close CMD, and open it again. Install [Git for Windows](https://git-scm.com/download/win) if `git` is not recognized.
+
+> The executable command is `zero-hawk dashboard` (not `sellbird dashboard`): ZERO HAWK is its own application and command.
 
 ## First five minutes
 
