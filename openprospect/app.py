@@ -10,7 +10,7 @@ from .ai import ask_ai
 from .discovery import discover_osm
 from .profiling import profile_website
 from .verification import verify_email,learn_email_pattern,guess_email
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urlencode
 
 import contextvars
 _current_path=contextvars.ContextVar("zh_path",default="/")
@@ -77,7 +77,7 @@ def home():
 
 @app.get("/discover",response_class=HTMLResponse)
 def discover_page():
- return shell("""<h1>Discover businesses</h1><p class='muted'>Use community OpenStreetMap data or Google Maps Places. Both feed the same company register and cross-source duplicate checks.</p><div class='cols'><section><h2>OpenStreetMap</h2><p class='muted'>Free, no API key. Coverage varies by area.</p><form method='post' action='/discover'><label>City or place</label><input name='city' placeholder='Nairobi, Kenya' required><label>Business category</label><select name='category'><option>any business</option><option>restaurant</option><option>cafe</option><option>hotel</option><option>shop</option><option>beauty</option><option>clinic</option><option>dentist</option><option>school</option><option>gym</option><option>supermarket</option></select><label>Maximum results</label><input name='limit' type='number' min='1' max='200' value='50'><button>Search OpenStreetMap</button></form></section><section><h2>Google Maps</h2><p class='muted'>Google Places import with an API key, plus live Maps search links.</p><a href='/discover/google'>Open Google Maps discovery →</a></section></div><p><a href='/research'>Scout AI: Google Search and website research →</a> · <a href='/companies'>View saved companies</a></p>""")
+ return shell("""<h1>Discover businesses</h1><p class='muted'>Use community OpenStreetMap data or Google Maps Places. Both feed the same company register and cross-source duplicate checks.</p><div class='cols'><section><h2>OpenStreetMap</h2><p class='muted'>Free, no API key. Coverage varies by area.</p><form method='post' action='/discover'><label>City or place</label><input name='city' placeholder='Nairobi, Kenya' required><label>Business category</label><select name='category'><option>any business</option><option>restaurant</option><option>cafe</option><option>hotel</option><option>shop</option><option>beauty</option><option>clinic</option><option>dentist</option><option>school</option><option>gym</option><option>supermarket</option></select><label>Maximum results</label><input name='limit' type='number' min='1' max='200' value='50'><button>Search OpenStreetMap</button></form></section><section><h2>Google Maps · free search</h2><p class='muted'>No API key or bank card. Search Google Maps, choose a business, then save its public details to ZERO HAWK. Scout can research the saved business afterwards.</p><a href='/discover/google'>Open free Google Maps discovery →</a></section></div><p><a href='/research'>Scout AI: Google Search and website research →</a> · <a href='/companies'>View saved companies</a></p>""")
 
 @app.post("/discover",response_class=HTMLResponse)
 def discover_run(city:str=Form(...),category:str=Form("any business"),limit:int=Form(50)):
@@ -91,6 +91,34 @@ def discover_run(city:str=Form(...),category:str=Form("any business"),limit:int=
  rows="".join(f"<tr><td>{esc(x['name'])}</td><td>{esc(x['category'])}</td><td>{esc(x['website']) or 'No website listed'}</td><td>{esc(x['phone'])}</td></tr>" for x in results)
  log("discovery_completed",f"{city}: {len(results)} found, {saved} new")
  return shell(f"<h1>Discovery complete</h1><p>Found {len(results)} map entries; saved {saved} new companies.</p><section><table><tr><th>Name</th><th>Category</th><th>Website</th><th>Phone</th></tr>{rows}</table></section><a href='/companies'>Open company register</a> · <a href='/discover'>Search again</a>")
+
+
+@app.get("/discover/google",response_class=HTMLResponse)
+def google_maps_discovery_page():
+ return shell("""<h1>Google Maps discovery · free mode</h1><p class='muted'>No Google Cloud account, API key or bank card required. This opens Google's own Maps search in your browser. Google does not provide unrestricted free Places API access, so ZERO HAWK does not scrape Maps pages or pretend to import results automatically.</p>
+ <section><h2>1. Search Google Maps</h2><form method='post' action='/discover/google'><label>City or place</label><input name='city' placeholder='Nairobi, Kenya' required><label>Business category or search phrase</label><input name='category' value='restaurant' placeholder='restaurant, cafe, salon...'><button>Open Google Maps search</button></form></section>
+ <section><h2>2. Save a business you choose</h2><p class='muted'>Open a listing in Google Maps, copy the publicly displayed business details and save them here. Leave fields blank if the listing does not publish them. Do not guess.</p><form method='post' action='/discover/google/save'><label>Business name</label><input name='name' required placeholder='Business name as shown on Maps'><label>Website</label><input name='website' type='url' placeholder='https://...'><label>Public phone</label><input name='phone' placeholder='+254...'><label>Public email (only if published)</label><input name='email' type='email' placeholder='name@example.com'><label>Location / address</label><input name='location' placeholder='Address shown on Maps'><label>Google Maps listing or search URL</label><input name='source_url' type='url' placeholder='https://maps.google.com/...'><button>Save business to ZERO HAWK</button></form></section>
+ <p><a href='/research'>Use Scout AI to research saved businesses →</a> · <a href='/companies'>View saved companies</a></p>""")
+
+@app.post("/discover/google",response_class=HTMLResponse)
+def google_maps_discovery_search(city:str=Form(...),category:str=Form("any business")):
+ city=city.strip(); category=category.strip() or "any business"
+ if not city:return shell("<h1>Google Maps discovery</h1><p class='warning'>Enter a city or place.</p><a href='/discover/google'>Try again</a>")
+ query=f"{category} in {city}"
+ maps_url="https://www.google.com/maps/search/?"+urlencode({"api":"1","query":query})
+ search_url="https://www.google.com/search?"+urlencode({"q":query+" official website phone email"})
+ return shell(f"<h1>Google Maps search ready</h1><p>Search for <b>{esc(query)}</b> using Google's own service.</p><section><p><a href='{esc(maps_url)}' target='_blank' rel='noopener'>Open Google Maps results →</a></p><p><a href='{esc(search_url)}' target='_blank' rel='noopener'>Search Google for official business websites and public contacts →</a></p><p class='muted'>Choose a listing, check that it is the right business, then return to <a href='/discover/google'>the save form</a>. Scout research can add source-linked evidence, but no contact details are invented.</p></section>")
+
+@app.post("/discover/google/save",response_class=HTMLResponse)
+def google_maps_save_business(name:str=Form(...),website:str=Form(""),phone:str=Form(""),email:str=Form(""),location:str=Form(""),source_url:str=Form("")):
+ name=name.strip()
+ if not name:raise HTTPException(400,"Business name is required.")
+ existing=find_company_duplicate(website,phone,name)
+ if existing:
+  return shell(f"<h1>Already saved</h1><p><b>{esc(name)}</b> matches an existing company record. ZERO HAWK skipped the duplicate.</p><a href='/company/{existing['id']}'>Open existing company →</a> · <a href='/discover/google'>Back to Google Maps discovery</a>")
+ ident=add_company(name,website,"",location,"","google_maps",source_url,phone,email,"")
+ log("google_maps_business_saved",name)
+ return shell(f"<h1>Business saved</h1><p><b>{esc(name)}</b> has been added to your company register.</p><p>Website: {esc(website) or 'Not provided'} · Phone: {esc(phone) or 'Not provided'} · Email: {esc(email) or 'Not provided'}</p><a href='/company/{ident}'>Open company →</a> · <a href='/research'>Research with Scout AI →</a>")
 
 @app.get("/companies",response_class=HTMLResponse)
 def companies_page():return shell("<h1>Companies</h1>"+company_table(list_companies(10000))+"""<section><h2>Add company manually</h2><form method='post' action='/companies'><input name='name' placeholder='Business name' required><input name='website' placeholder='https://example.com'><input name='industry' placeholder='Industry'><input name='location' placeholder='City, country'><input name='phone' placeholder='Public business phone'><input name='email' placeholder='Published business email'><input name='socials' placeholder='Public social links'><textarea name='notes' placeholder='Notes and source context'></textarea><button>Add company</button></form><p><a href='/export/companies.csv'>Export companies as CSV</a></p><form method='post' action='/import/companies.csv' enctype='multipart/form-data'><label>Import companies CSV</label><input type='file' name='file' accept='.csv,text/csv' required><button>Import CSV</button></form></section>""")
