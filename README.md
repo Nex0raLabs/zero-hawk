@@ -311,3 +311,12 @@ Issues and pull requests are welcome. Include reproducible steps and tests for c
 ## License
 
 Zero Hawk is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**. See [LICENSE](LICENSE).
+
+
+## Google Maps and Scout research
+
+The Discover workspace now keeps OpenStreetMap / Overpass and adds Google Maps Places Text Search. Google Maps import is optional: create a Google Maps Platform key with Places API enabled, restrict the key to Places API, and set `ZERO_HAWK_GOOGLE_MAPS_API_KEY` in your private `.env`. Google Maps Platform may require billing and can incur usage charges. Without a key, Zero Hawk still creates a direct Google Maps search link; it does not scrape Google Maps pages.
+
+Scout research uses Google Search result links and browses accessible public websites to collect published website, phone, email and social-profile evidence. Each extracted value includes a source URL and a confidence label. Multiple differing values are shown as conflicts instead of being silently merged. Scout's AI analysis is instructed to use only the retrieved evidence and mark missing facts as unknown. Research reports do not automatically overwrite saved company contact details.
+
+Company deduplication is shared across sources and checks normalized business names, website domains and normalized phone numbers (including common Kenyan +254 / 0 formats). Duplicate records are skipped during discovery and CSV import; the database insert path also checks before adding a record.
