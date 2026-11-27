@@ -19,12 +19,18 @@ class _ProfileParser(HTMLParser):
         self.title_parts: list[str] = []
         self.text_parts: list[str] = []
         self.links: list[str] = []
+        self.link_texts: list[str] = []
+        self._active_link = False
+        self._active_link_text: list[str] = []
         self.meta: dict[str, str] = {}
         self.has_schema = False
         self.has_viewport = False
 
     def handle_starttag(self, tag: str, attrs) -> None:
         data = dict(attrs)
+        if tag == "a":
+            self._active_link = True
+            self._active_link_text = []
         if tag == "title":
             self.in_title = True
         if tag == "meta":
@@ -43,6 +49,11 @@ class _ProfileParser(HTMLParser):
     def handle_endtag(self, tag: str) -> None:
         if tag == "title":
             self.in_title = False
+        if tag == "a" and self._active_link:
+            label = re.sub(r"\s+", " ", " ".join(self._active_link_text)).strip()
+            self.link_texts.append(label)
+            self._active_link = False
+            self._active_link_text = []
 
     def handle_data(self, data: str) -> None:
         value = re.sub(r"\s+", " ", data).strip()
@@ -50,6 +61,8 @@ class _ProfileParser(HTMLParser):
             self.text_parts.append(value)
             if self.in_title:
                 self.title_parts.append(value)
+            if self._active_link:
+                self._active_link_text.append(value)
 
 
 DEFAULT_RULES = {
@@ -179,7 +192,11 @@ def profile_website(url: str):
     phones = sorted(set(re.findall(r"(?<!\w)(?:\+?\d[\d ().-]{7,}\d)", text)))[:20]
     links = [urllib.parse.urljoin(final_url, link) for page in all_parsers for link in page.links]
     joined = (raw + " " + text + " " + " ".join(links)).lower()
-    has_contact = any(word in link.lower() for link in links for word in ("contact", "get-in-touch"))
+    link_labels = [label.lower() for page in all_parsers for label in page.link_texts]
+    has_contact = (
+        any(word in link.lower() for link in links for word in ("contact", "get-in-touch"))
+        or any("contact" in label or "get in touch" in label for label in link_labels)
+    )
     has_booking = any(word in joined for word in ("booking", "book online", "appointment", "reserve a table", "reservations", "schedule online"))
     has_ordering = any(word in joined for word in ("order online", "online ordering", "place order", "delivery menu"))
     has_whatsapp = any(word in joined for word in ("wa.me/", "api.whatsapp.com", "whatsapp.com/send"))
