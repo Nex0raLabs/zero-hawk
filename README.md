@@ -181,6 +181,35 @@ Choose a CLI provider in Settings if its command-line tool is already installed 
 
 Anthropic and OpenAI-compatible endpoints can be configured with their respective API keys. Provider usage may incur charges. Never paste API keys into GitHub, screenshots, issues or chat messages.
 
+## 📱 Connect WhatsApp
+
+Zero Hawk now includes an official WhatsApp Business Cloud API integration and keeps the optional Baileys sidecar for local experimentation.
+
+### Official Cloud API setup
+
+1. Create or select a Meta developer app and add the WhatsApp product.
+2. In the WhatsApp API setup, obtain your access token, Phone Number ID and WhatsApp Business Account details. Keep the token private.
+3. Add these values to your local, ignored `.env` file (not GitHub):
+   ```env
+   ZERO_HAWK_WA_CLOUD_TOKEN=your_access_token
+   ZERO_HAWK_WA_PHONE_NUMBER_ID=your_phone_number_id
+   ZERO_HAWK_WA_VERIFY_TOKEN=your_private_webhook_verify_token
+   ZERO_HAWK_WA_APP_SECRET=your_meta_app_secret
+   ZERO_HAWK_WA_API_VERSION=v27.0
+   ZERO_HAWK_WA_DAILY_SEND_LIMIT=25
+   ```
+4. Restart Zero Hawk and open **WhatsApp** in the dashboard. Use **Test Cloud API connection**.
+5. Configure the Meta webhook callback as `https://YOUR-PUBLIC-HTTPS-HOST/webhooks/whatsapp`, enter the same verify token, and subscribe to the WhatsApp `messages` field.
+6. The webhook must reach the running Zero Hawk process over public HTTPS. For a local Windows installation, use a secure HTTPS tunnel or reverse proxy and keep the dashboard itself private.
+
+The dashboard stores inbound messages, delivery/read status events, conversation notes and status. Open a WhatsApp thread to review it, ask the configured AI provider to analyse the conversation, or write and edit a reply. Sending requires the explicit approval checkbox, obeys the global sending pause and a configurable daily cap, and is never triggered by Autopilot.
+
+**Important limitations:** Cloud API free-form replies are subject to WhatsApp's customer-service window and template rules; approved templates outside that window are not implemented in this first integration. Media messages are recorded as message-type placeholders rather than downloaded into the local database. Previously delivered messages cannot be freely edited or deleted by this dashboard. Meta may charge for business messaging according to its current pricing and message category. Use the official Meta documentation for current eligibility, onboarding and pricing.
+
+### Optional local WhatsApp Web sidecar
+
+The existing Baileys sidecar remains available for personal/local testing. It is unofficial and may cause account restrictions. It is not the recommended production connection. Do not use it for bulk unsolicited outreach.
+
 ## 🔌 Connect a compatible AI client (MCP)
 
 Zero Hawk includes an optional local MCP server. Install the extra:
@@ -213,7 +242,7 @@ Replace `YOUR_USER` with your Windows account folder. The MCP agent tools can se
 - The send path checks the app's verified-recipient status, suppression list and HTTPS unsubscribe configuration.
 - A verification label is a heuristic status, not proof that a person owns or reads an inbox.
 - Public contact details do not automatically mean someone has consented to marketing.
-- WhatsApp support is an optional unofficial Baileys sidecar and has not been proven production-ready.
+- WhatsApp Cloud API has a code-level integration for text sending, inbound webhooks, delivery/read status, conversation notes and AI analysis; live Meta onboarding and end-to-end tests still require the user's Meta credentials and a public HTTPS webhook. The optional Baileys sidecar is unofficial.
 
 Use a test mailbox and contacts you control before any real sending. Follow the marketing, privacy and anti-spam laws that apply to you and your recipients.
 
@@ -242,7 +271,7 @@ Zero Hawk is an active local-first alpha, not a finished autonomous sales platfo
 | AI provider connections | Provider options exist; test with your own installed provider |
 | SMTP sending | Implemented with manual approval gates; live mailbox testing required |
 | IMAP | Basic unread-message import; not a complete reply-management system |
-| WhatsApp | Optional unofficial sidecar; pairing and production safety not verified |
+| WhatsApp | Cloud API code path implemented; Meta credentials, public webhook and live end-to-end tests required |
 | Decision-maker enrichment | No complete provider-backed enrichment pipeline |
 | Campaign automation | No full discovery-to-send autonomous pipeline |
 | Production deployment | Not supported as a public multi-user service; dashboard is loopback-only |
