@@ -37,7 +37,8 @@ It runs on your own computer. Your local database stays local. Optional AI provi
 | **Research** | Read public business websites and collect source-linked observations | Companies |
 | **Spot signals** | Score configurable website indicators such as booking, ordering, HTTPS and hiring pages | Signals |
 | **Organise** | Keep companies, contacts, campaigns, notes and activity in a local SQLite database | Companies · Contacts · Campaigns |
-| **Train** | Read your own website and create an editable local profile for your product, offer and ideal customer | Train |\n| **Agent** | Ask Scout to analyse saved prospect evidence and prepare a reviewable outreach plan | Scout |
+| **Train** | Read your own website and create an editable local profile for your product, offer and ideal customer | Train |
+| **Agent** | Ask Scout to analyse saved prospect evidence and prepare a reviewable outreach plan | Scout |
 | **Draft** | Use a configured local or connected AI provider to prepare outreach drafts | Outbox |
 | **Review** | Inspect drafts and explicitly approve or reject them | Outbox |
 | **Send** | Send an approved, eligible email through configured SMTP | Outbox |
