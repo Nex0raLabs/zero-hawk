@@ -195,11 +195,27 @@ def whatsapp_pair(phone:str=Form(...)):
     return page("WhatsApp pairing code",f"<h2>{result.get('pairingCode','')}</h2><p>On your phone: WhatsApp → Linked devices → Link a device → Link with phone number.</p><a href='/whatsapp'>Back</a>")
 @router.post("/whatsapp/send",response_class=HTMLResponse)
 def whatsapp_send(to:str=Form(...),message:str=Form(...),approved:str=Form("")):
+    import re
     from .conversations import add_message
+    from .db import connect, is_suppressed, log
+    from .config import env_value
+    from .sendpolicy import check_send_allowed
     if approved!="yes": raise HTTPException(400,"Explicit approval is required.")
     try:
-        result=_wa_request("/send",{"to":to,"text":message,"approved":True})
-        add_message("whatsapp",str(result.get("id","")),to,"WhatsApp message",message,"outbound")
+        digits=re.sub(r"\D","",to or "")
+        if not re.fullmatch(r"[1-9][0-9]{7,14}",digits):
+            raise ValueError("Recipient must be an international phone number, e.g. 2547XXXXXXXX.")
+        if is_suppressed(digits) or is_suppressed("+"+digits):
+            raise RuntimeError("This WhatsApp number is on the suppression list.")
+        check_send_allowed()
+        cap=max(1,min(int(env_value("ZERO_HAWK_WA_DAILY_SEND_LIMIT","25")),100))
+        with connect() as conn:
+            count=conn.execute("SELECT COUNT(*) FROM activity WHERE event='whatsapp_sent' AND date(created_at)=date('now','localtime')").fetchone()[0]
+        if count>=cap:
+            raise RuntimeError("WhatsApp daily sending limit reached ("+str(cap)+").")
+        result=_wa_request("/send",{"to":digits,"text":message,"approved":True})
+        add_message("whatsapp",str(result.get("id","")),digits,"WhatsApp message",message,"outbound")
+        log("whatsapp_sent",digits+" | "+str(result.get("id","")))
     except Exception as exc:
         from .app import esc
         return page("WhatsApp send",f"<p class='warning'>Not sent: {esc(exc)}</p><a href='/whatsapp'>Back</a>")
