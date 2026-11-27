@@ -82,3 +82,13 @@ def test_google_maps_manual_save_deduplicates_business():
     second = client.post("/discover/google/save", data=data)
     assert first.status_code == 200 and "Business saved" in first.text
     assert second.status_code == 200 and "Already saved" in second.text
+
+
+def test_google_maps_search_never_calls_paid_places_api(monkeypatch):
+    from openprospect.discovery import discover_google_maps
+    monkeypatch.setenv("ZERO_HAWK_GOOGLE_MAPS_API_KEY", "should-not-be-used")
+    result = discover_google_maps("Nairobi, Kenya", "restaurant", 10)
+    assert result["configured"] is False
+    assert result["results"] == []
+    assert "no API key" in result["message"].lower()
+    assert "google.com/maps/search" in result["maps_url"]
