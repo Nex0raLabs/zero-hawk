@@ -188,7 +188,7 @@ Zero Hawk now includes an official WhatsApp Business Cloud API integration and k
 ### Official Cloud API setup
 
 1. Create or select a Meta developer app and add the WhatsApp product.
-2. In the WhatsApp API setup, obtain your access token, Phone Number ID and WhatsApp Business Account details. Keep the token private.
+2. In the WhatsApp API setup, obtain your access token, Phone Number ID and WhatsApp Business Account details. The Meta app needs the WhatsApp Business Messaging permission (and Business Management permission for account-management features). Keep the token private.
 3. Add these values to your local, ignored `.env` file (not GitHub):
    ```env
    ZERO_HAWK_WA_CLOUD_TOKEN=your_access_token
