@@ -136,10 +136,12 @@ def unsubscribe_one_click(email:str=Form(...)):
 
 @router.post("/api/whatsapp/inbound")
 def whatsapp_inbound(payload:dict):
-    import os, hmac
     # The security middleware checks the sidecar bearer token before this route.
     from .conversations import add_message
-    add_message("whatsapp",str(payload.get("external_id","")),str(payload.get("address","")),str(payload.get("subject","WhatsApp")),str(payload.get("body","")),"inbound")
+    direction=str(payload.get("direction","inbound"))
+    if direction not in {"inbound","outbound"}:
+        raise HTTPException(400,"Invalid message direction.")
+    add_message("whatsapp",str(payload.get("external_id","")),str(payload.get("address","")),str(payload.get("subject","WhatsApp")),str(payload.get("body",""))[:12000],direction)
     return {"ok":True}
 
 def _wa_request(path, payload=None):
