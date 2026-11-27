@@ -93,7 +93,7 @@ def _phone_key(value: str) -> str:
 
 
 def _name_key(value: str) -> str:
-    value = re.sub(r"\\b(limited|ltd|llc|inc|plc|company|co)\\b", " ", (value or "").lower())
+    value = re.sub(r"\b(limited|ltd|llc|inc|plc|company|co)\b", " ", (value or "").lower())
     return re.sub(r"[^a-z0-9]+", "", value)
 
 
