@@ -77,7 +77,7 @@ def home():
 
 @app.get("/discover",response_class=HTMLResponse)
 def discover_page():
- return shell("""<h1>Discover businesses</h1><p class='muted'>Free OpenStreetMap discovery. Searches a 10 km radius around the place you enter. Results depend on OpenStreetMap coverage and are not a complete business directory.</p><section><form method='post' action='/discover'><label>City or place</label><input name='city' placeholder='Nairobi, Kenya' required><label>Business category</label><select name='category'><option>any business</option><option>restaurant</option><option>cafe</option><option>hotel</option><option>shop</option><option>beauty</option><option>clinic</option><option>dentist</option><option>school</option><option>gym</option><option>supermarket</option></select><label>Maximum results</label><input name='limit' type='number' min='1' max='200' value='50'><button>Search free map data</button></form></section><p><a href='/companies'>View saved companies</a></p>""")
+ return shell("""<h1>Discover businesses</h1><p class='muted'>Use community OpenStreetMap data or Google Maps Places. Both feed the same company register and cross-source duplicate checks.</p><div class='cols'><section><h2>OpenStreetMap</h2><p class='muted'>Free, no API key. Coverage varies by area.</p><form method='post' action='/discover'><label>City or place</label><input name='city' placeholder='Nairobi, Kenya' required><label>Business category</label><select name='category'><option>any business</option><option>restaurant</option><option>cafe</option><option>hotel</option><option>shop</option><option>beauty</option><option>clinic</option><option>dentist</option><option>school</option><option>gym</option><option>supermarket</option></select><label>Maximum results</label><input name='limit' type='number' min='1' max='200' value='50'><button>Search OpenStreetMap</button></form></section><section><h2>Google Maps</h2><p class='muted'>Google Places import with an API key, plus live Maps search links.</p><a href='/discover/google'>Open Google Maps discovery →</a></section></div><p><a href='/research'>Scout AI: Google Search and website research →</a> · <a href='/companies'>View saved companies</a></p>""")
 
 @app.post("/discover",response_class=HTMLResponse)
 def discover_run(city:str=Form(...),category:str=Form("any business"),limit:int=Form(50)):
@@ -86,7 +86,7 @@ def discover_run(city:str=Form(...),category:str=Form("any business"),limit:int=
  saved=0
  for x in results:
   # Deduplicate against a normalized company domain or phone number.
-  if find_company_duplicate(x["website"],x["phone"]):continue
+  if find_company_duplicate(x["website"],x["phone"],x["name"]):continue
   add_company(x["name"],x["website"],x["category"],x["address"] or city,"", "openstreetmap",x["source_url"],x["phone"],x["email"],x["socials"]);saved+=1
  rows="".join(f"<tr><td>{esc(x['name'])}</td><td>{esc(x['category'])}</td><td>{esc(x['website']) or 'No website listed'}</td><td>{esc(x['phone'])}</td></tr>" for x in results)
  log("discovery_completed",f"{city}: {len(results)} found, {saved} new")
@@ -373,3 +373,5 @@ app.include_router(extra_router)
 
 from .suite_routes import router as suite_router
 app.include_router(suite_router)
+from .research_routes import router as research_router
+app.include_router(research_router)
