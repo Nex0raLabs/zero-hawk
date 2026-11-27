@@ -92,15 +92,23 @@ def _phone_key(value: str) -> str:
     return digits
 
 
-def find_company_duplicate(website: str = "", phone: str = ""):
+def _name_key(value: str) -> str:
+    value = re.sub(r"\\b(limited|ltd|llc|inc|plc|company|co)\\b", " ", (value or "").lower())
+    return re.sub(r"[^a-z0-9]+", "", value)
+
+
+def find_company_duplicate(website: str = "", phone: str = "", name: str = ""):
     domain = _domain(website)
     phone_key = _phone_key(phone)
+    name_key = _name_key(name)
     with connect() as c:
-        rows = c.execute("SELECT id, website, phone FROM companies ORDER BY id").fetchall()
+        rows = c.execute("SELECT id, name, website, phone FROM companies ORDER BY id").fetchall()
     for row in rows:
         if domain and _domain(row["website"]) == domain:
             return dict(row)
         if phone_key and _phone_key(row["phone"]) == phone_key:
+            return dict(row)
+        if name_key and _name_key(row["name"]) == name_key:
             return dict(row)
     return None
 
@@ -112,6 +120,14 @@ def log(event, details=""):
 
 def add_company(name, website="", industry="", location="", notes="", source="manual", source_url="", phone="", email="", socials=""):
     with connect() as c:
+        domain = _domain(website)
+        phone_key = _phone_key(phone)
+        name_key = _name_key(name)
+        for row in c.execute("SELECT id, name, website, phone FROM companies ORDER BY id").fetchall():
+            if ((domain and _domain(row["website"]) == domain)
+                or (phone_key and _phone_key(row["phone"]) == phone_key)
+                or (name_key and _name_key(row["name"]) == name_key)):
+                return row["id"]
         cur = c.execute(
             "INSERT INTO companies(name,website,industry,location,notes,source,source_url,phone,email,socials) VALUES(?,?,?,?,?,?,?,?,?,?)",
             (name.strip(), website.strip(), industry.strip(), location.strip(), notes.strip(),
