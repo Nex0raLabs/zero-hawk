@@ -6,6 +6,7 @@ from openprospect.whatsapp_cloud import (
     cloud_api_status,
     consume_webhook,
     send_text,
+    send_template,
     verify_webhook_signature,
 )
 from openprospect.conversations import get_conversation, list_conversations, list_messages
@@ -67,3 +68,11 @@ def test_cloud_send_requires_explicit_approval(monkeypatch):
     import pytest
     with pytest.raises(RuntimeError, match="explicitly approved"):
         send_text(to="254700000001", text="Test", approved=False)
+
+
+def test_template_send_requires_explicit_approval(monkeypatch):
+    monkeypatch.setenv("ZERO_HAWK_WA_CLOUD_TOKEN", "fake-token")
+    monkeypatch.setenv("ZERO_HAWK_WA_PHONE_NUMBER_ID", "123456789")
+    import pytest
+    with pytest.raises(RuntimeError, match="explicitly approved"):
+        send_template(to="254700000001", template_name="hello_world", approved=False)
