@@ -37,7 +37,7 @@ It runs on your own computer. Your local database stays local. Optional AI provi
 | **Research** | Read public business websites and collect source-linked observations | Companies |
 | **Spot signals** | Score configurable website indicators such as booking, ordering, HTTPS and hiring pages | Signals |
 | **Organise** | Keep companies, contacts, campaigns, notes and activity in a local SQLite database | Companies · Contacts · Campaigns |
-| **Train** | Read your own website and create an editable local profile for your product, offer and ideal customer | Train |
+| **Train** | Read your own website and create an editable local profile for your product, offer and ideal customer | Train |\n| **Agent** | Ask Scout to analyse saved prospect evidence and prepare a reviewable outreach plan | Scout |
 | **Draft** | Use a configured local or connected AI provider to prepare outreach drafts | Outbox |
 | **Review** | Inspect drafts and explicitly approve or reject them | Outbox |
 | **Send** | Send an approved, eligible email through configured SMTP | Outbox |
@@ -78,6 +78,8 @@ Zero Hawk can be used one stage at a time. You do not need to connect an email a
 - **Evidence-aware research:** Public-site observations retain source URLs and confidence context.
 - **Configurable signals:** Deterministic website checks; no AI call is required for signal profiling.
 - **Flexible AI:** Ollama, Claude Code CLI, Codex CLI, and optional hosted API-compatible providers.
+- **Scout agent workspace:** run an AI research report over saved companies, recorded signals, contact records and your trained offer; it prepares a three-step outreach plan but never sends it.
+- **Free warmup choices:** launch Warmerly Free, TrulyInbox Free or Warmup Inbox Freemium; provider-side warmup is managed on each provider unless an eligible API integration is configured.
 - **Human-reviewed email:** SMTP sending is gated by explicit approval, recipient status, suppression checks and an HTTPS unsubscribe base URL.
 - **Portable data:** CSV import and export for company and contact records.
 - **Compatible tools:** Optional MCP server for supported local AI clients.
