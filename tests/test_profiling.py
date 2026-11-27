@@ -78,3 +78,16 @@ def test_signal_observations_keep_company_and_evidence(monkeypatch, tmp_path):
     assert rows[0]["company_name"] == "Evidence Cafe"
     assert rows[0]["evidence_url"] == "https://evidence.example/"
     assert rows[0]["confidence"] == 0.75
+
+
+
+def test_profile_recognizes_contact_anchor_text_without_contact_url(monkeypatch, tmp_path):
+    monkeypatch.setenv("OPENPROSPECT_HOME", str(tmp_path))
+    monkeypatch.setattr(profiling, "_allowed_by_robots", lambda url: True)
+    monkeypatch.setattr(profiling, "_fetch", lambda url: (
+        "https://sample.example/",
+        '<html><head><title>Sample Restaurant</title><meta name="viewport" content="width=device-width"></head>'
+        '<body><nav><a href="#footer">Contact Us</a></nav><p>Welcome.</p></body></html>',
+    ))
+    result = profiling.profile_website("https://sample.example/")
+    assert "NO_CONTACT_PAGE" not in {signal["code"] for signal in result["signals"]}
