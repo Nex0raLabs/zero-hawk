@@ -193,9 +193,14 @@ def whatsapp_pair(phone:str=Form(...)):
     return page("WhatsApp pairing code",f"<h2>{result.get('pairingCode','')}</h2><p>On your phone: WhatsApp → Linked devices → Link a device → Link with phone number.</p><a href='/whatsapp'>Back</a>")
 @router.post("/whatsapp/send",response_class=HTMLResponse)
 def whatsapp_send(to:str=Form(...),message:str=Form(...),approved:str=Form("")):
+    from .conversations import add_message
     if approved!="yes": raise HTTPException(400,"Explicit approval is required.")
-    try: result=_wa_request("/send",{"to":to,"text":message,"approved":True})
-    except Exception as exc: return page("WhatsApp send",f"<p class='warning'>Not sent: {exc}</p><a href='/whatsapp'>Back</a>")
+    try:
+        result=_wa_request("/send",{"to":to,"text":message,"approved":True})
+        add_message("whatsapp",str(result.get("id","")),to,"WhatsApp message",message,"outbound")
+    except Exception as exc:
+        from .app import esc
+        return page("WhatsApp send",f"<p class='warning'>Not sent: {esc(exc)}</p><a href='/whatsapp'>Back</a>")
     return page("WhatsApp send",f"<p>Sidecar accepted message ID: {result.get('id')}</p><a href='/inbox'>Open inbox</a>")
 
 
