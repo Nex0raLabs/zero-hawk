@@ -142,3 +142,67 @@ def test_connection() -> dict:
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", "replace")[:2000]
         raise RuntimeError("Meta connection check failed (" + str(exc.code) + "): " + detail) from exc
+
+def send_template(*, to: str, template_name: str, language: str = "en_US",
+                  body_parameters: list[str] | None = None, approved: bool = False) -> dict:
+    """Send an approved Meta template, including optional positional BODY parameters."""
+    cfg = cloud_api_status()
+    if not cfg["configured"]:
+        raise RuntimeError("WhatsApp Cloud API is not configured: " + ", ".join(cfg["missing"]))
+    if not approved:
+        raise RuntimeError("Template message must be explicitly approved before sending.")
+    digits = re.sub(r"\D", "", str(to or ""))
+    if not re.fullmatch(r"[1-9][0-9]{7,14}", digits):
+        raise ValueError("Recipient must be an international phone number, e.g. 2547XXXXXXXX.")
+    name = str(template_name or "").strip()
+    if not re.fullmatch(r"[a-z0-9_]{1,512}", name):
+        raise ValueError("Template name must use lowercase letters, numbers and underscores.")
+    lang = str(language or "en_US").strip()
+    if not re.fullmatch(r"[a-z]{2,3}_[A-Z]{2}", lang):
+        raise ValueError("Language must look like en_US.")
+    if is_suppressed(digits) or is_suppressed("+" + digits):
+        raise RuntimeError("This WhatsApp number is on the suppression list.")
+    from .sendpolicy import check_send_allowed
+    check_send_allowed()
+    cap = max(1, min(int(env_value("ZERO_HAWK_WA_DAILY_SEND_LIMIT", "25")), 100))
+    with connect() as conn:
+        sent_today = conn.execute(
+            "SELECT COUNT(*) FROM activity WHERE event='whatsapp_sent' AND date(created_at)=date('now','localtime')"
+        ).fetchone()[0]
+    if sent_today >= cap:
+        raise RuntimeError("WhatsApp daily sending limit reached (" + str(cap) + ").")
+    params = [str(value)[:1024] for value in (body_parameters or []) if str(value).strip()]
+    if len(params) > 20:
+        raise ValueError("A maximum of 20 BODY parameters is supported by this form.")
+    template = {"name": name, "language": {"code": lang}}
+    if params:
+        template["components"] = [{
+            "type": "body",
+            "parameters": [{"type": "text", "text": value} for value in params],
+        }]
+    payload = {
+        "messaging_product": "whatsapp",
+        "recipient_type": "individual",
+        "to": digits,
+        "type": "template",
+        "template": template,
+    }
+    url = "https://graph.facebook.com/" + cfg["api_version"] + "/" + cfg["phone_number_id"] + "/messages"
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Authorization": "Bearer " + env_value("ZERO_HAWK_WA_CLOUD_TOKEN"),
+                 "Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=25) as response:
+            result = json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", "replace")[:2000]
+        raise RuntimeError("Meta WhatsApp template send failed (" + str(exc.code) + "): " + detail) from exc
+    message_id = ((result.get("messages") or [{}])[0]).get("id", "")
+    if not message_id:
+        raise RuntimeError("Meta returned no message ID; template delivery is not confirmed.")
+    log("whatsapp_sent", digits + " | template " + name + " | " + message_id)
+    return {"sent": True, "id": message_id, "to": digits, "template": name, "response": result}
