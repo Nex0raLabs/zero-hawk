@@ -44,7 +44,7 @@ def send_text(*, to: str, text: str, approved: bool = False) -> dict:
         raise RuntimeError("WhatsApp Cloud API is not configured: " + ", ".join(cfg["missing"]))
     if not approved:
         raise RuntimeError("Message must be explicitly approved before sending.")
-    digits = re.sub(r"\\D", "", str(to or ""))
+    digits = re.sub(r"\D", "", str(to or ""))
     if not re.fullmatch(r"[1-9][0-9]{7,14}", digits):
         raise ValueError("Recipient must be an international phone number, e.g. 2547XXXXXXXX.")
     message = str(text or "").strip()
