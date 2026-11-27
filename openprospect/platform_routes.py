@@ -210,7 +210,7 @@ def whatsapp_send(to:str=Form(...),message:str=Form(...),approved:str=Form("")):
         check_send_allowed()
         cap=max(1,min(int(env_value("ZERO_HAWK_WA_DAILY_SEND_LIMIT","25")),100))
         with connect() as conn:
-            count=conn.execute("SELECT COUNT(*) FROM activity WHERE event='whatsapp_sent' AND date(created_at)=date('now','localtime')").fetchone()[0]
+            count=conn.execute("SELECT COUNT(*) FROM activity WHERE event='whatsapp_sent' AND date(created_at,'localtime')=date('now','localtime')").fetchone()[0]
         if count>=cap:
             raise RuntimeError("WhatsApp daily sending limit reached ("+str(cap)+").")
         result=_wa_request("/send",{"to":digits,"text":message,"approved":True})
