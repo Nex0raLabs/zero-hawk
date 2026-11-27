@@ -59,7 +59,7 @@ def send_text(*, to: str, text: str, approved: bool = False) -> dict:
     cap = max(1, min(int(env_value("ZERO_HAWK_WA_DAILY_SEND_LIMIT", "25")), 100))
     with connect() as conn:
         sent_today = conn.execute(
-            "SELECT COUNT(*) FROM activity WHERE event='whatsapp_sent' AND date(created_at)=date('now','localtime')"
+            "SELECT COUNT(*) FROM activity WHERE event='whatsapp_sent' AND date(created_at,'localtime')=date('now','localtime')"
         ).fetchone()[0]
     if sent_today >= cap:
         raise RuntimeError("WhatsApp daily sending limit reached (" + str(cap) + ").")
