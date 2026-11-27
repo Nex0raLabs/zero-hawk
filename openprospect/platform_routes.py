@@ -224,12 +224,13 @@ def whatsapp_send(to:str=Form(...),message:str=Form(...),approved:str=Form("")):
 
 @router.get("/webhooks/whatsapp")
 def whatsapp_webhook_verify(request: Request):
+    import hmac
     from .config import env_value
     mode=request.query_params.get("hub.mode","")
     token=request.query_params.get("hub.verify_token","")
     challenge=request.query_params.get("hub.challenge","")
     expected=env_value("ZERO_HAWK_WA_VERIFY_TOKEN","")
-    if mode=="subscribe" and expected and token==expected:
+    if mode=="subscribe" and expected and hmac.compare_digest(token,expected):
         return Response(content=challenge,media_type="text/plain",status_code=200)
     raise HTTPException(403,"WhatsApp webhook verification failed.")
 
