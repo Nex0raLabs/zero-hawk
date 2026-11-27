@@ -1,5 +1,5 @@
 from __future__ import annotations
-import csv,html,io,json
+import csv,html,io,json,difflib,re
 from contextlib import asynccontextmanager
 from fastapi import FastAPI,Form,HTTPException,File,UploadFile
 from fastapi.responses import HTMLResponse,RedirectResponse,StreamingResponse,Response
@@ -125,8 +125,17 @@ def profile_company(company_id:int):
  data=profile_website(row["website"])
  if data.get("error"):return shell(f"<h1>Website profile</h1><p class='warning'>{esc(data['error'])}</p><a href='/company/{company_id}'>Back</a>")
  save_company_observations(company_id,data.get("signals",[]))
+ if data.get("title"):
+  save_company_observations(company_id,[{
+   "code":"WEBSITE_IDENTITY","label":f"Homepage identifies this business as: {data['title']}",
+   "weight":0,"confidence":1.0,"evidence_url":data.get("url","")
+  }])
+ site_label=(data.get("title") or "").split("|")[0].split("—")[0].strip()
+ norm=lambda value: re.sub(r"[^a-z0-9]+","",value.lower())
+ identity_mismatch=bool(site_label and len(norm(site_label))>3 and difflib.SequenceMatcher(None,norm(row["name"]),norm(site_label)).ratio()<0.35)
+ identity_warning=(f"<p class='warning'><b>Possible business identity mismatch:</b> your saved record says {esc(row['name'])}, but the homepage title says {esc(site_label)}. Confirm the correct business before drafting outreach.</p>" if identity_mismatch else "")
  signal_rows="".join(f"<tr><td>{esc(s['label'])}</td><td>{s['weight']}</td><td>{s['confidence']:.0%}</td><td><a href='{esc(s['evidence_url'])}'>Evidence</a></td></tr>" for s in data.get("signals",[]))
- return shell(f"<h1>Website profile: {esc(row['name'])}</h1><section><p><b>{esc(data['title'])}</b></p><p>{esc(data['description'])}</p><p>Fetched: <a href='{esc(data['url'])}'>{esc(data['url'])}</a></p><p>Opportunity score: <b>{data['score']}/100</b> · Pages read: {len(data['pages'])} · Load: {data['load_seconds']}s</p><h3>Buying signals</h3><table><tr><th>Signal</th><th>Weight</th><th>Confidence</th><th>Evidence</th></tr>{signal_rows or '<tr><td colspan=4>No enabled signals found</td></tr>'}</table><h3>Public email strings found (unverified)</h3><ul>{''.join('<li>'+esc(e)+'</li>' for e in data['emails']) or '<li>None found</li>'}</ul><h3>Possible phone strings (unverified)</h3><ul>{''.join('<li>'+esc(p)+'</li>' for p in data['phones']) or '<li>None found</li>'}</ul><h3>Page text excerpt</h3><p>{esc(data['text'][:5000])}</p></section><a href='/company/{company_id}'>Back to company</a>")
+ return shell(f"<h1>Website profile: {esc(row['name'])}</h1><section>{identity_warning}<p><b>{esc(data['title'])}</b></p><p>{esc(data['description'])}</p><p>Fetched: <a href='{esc(data['url'])}'>{esc(data['url'])}</a></p><p>Opportunity score: <b>{data['score']}/100</b> · Pages read: {len(data['pages'])} · Load: {data['load_seconds']}s</p><h3>Buying signals</h3><table><tr><th>Signal</th><th>Weight</th><th>Confidence</th><th>Evidence</th></tr>{signal_rows or '<tr><td colspan=4>No enabled signals found</td></tr>'}</table><h3>Public email strings found (unverified)</h3><ul>{''.join('<li>'+esc(e)+'</li>' for e in data['emails']) or '<li>None found</li>'}</ul><h3>Possible phone strings (unverified)</h3><ul>{''.join('<li>'+esc(p)+'</li>' for p in data['phones']) or '<li>None found</li>'}</ul><h3>Page text excerpt</h3><p>{esc(data['text'][:5000])}</p></section><a href='/company/{company_id}'>Back to company</a>")
 
 @app.get("/contacts",response_class=HTMLResponse)
 def contacts_page():
