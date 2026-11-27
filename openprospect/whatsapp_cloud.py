@@ -129,3 +129,16 @@ def consume_webhook(payload: dict) -> dict:
                     log("whatsapp_" + state, message_id)
                     statuses += 1
     return {"messages": added, "statuses": statuses}
+
+def test_connection() -> dict:
+    cfg = cloud_api_status()
+    if not cfg["configured"]:
+        raise RuntimeError("WhatsApp Cloud API is not configured: " + ", ".join(cfg["missing"]))
+    url = "https://graph.facebook.com/" + cfg["api_version"] + "/" + cfg["phone_number_id"] + "?fields=display_phone_number,verified_name,quality_rating"
+    req = urllib.request.Request(url, headers={"Authorization": "Bearer " + env_value("ZERO_HAWK_WA_CLOUD_TOKEN")})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", "replace")[:2000]
+        raise RuntimeError("Meta connection check failed (" + str(exc.code) + "): " + detail) from exc
