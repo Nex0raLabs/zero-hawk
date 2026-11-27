@@ -64,7 +64,7 @@ def setup_hub():
       ("Sending", [("Inboxes","Mailboxes and sending status","/connections"),("Domains and email records","SPF, DKIM, DMARC and MX checks","/settings"),("Sending mode and keys","Provider settings and API keys","/settings"),("Limits and rules","Daily limits, quiet hours and stop switch","/controls"),("Opt-outs and bounces","Suppression and unsubscribe controls","/compliance")]),
       ("Finding people", [("Your company","Company profile and offer","/train"),("Signals","Buying signals and evidence","/signals"),("Find businesses","Discover local businesses","/discover"),("People and contacts","Saved people and verification","/contacts")]),
       ("Inbound", [("Leads from forms","Inbound lead capture and routing","/inbox"),("Conversations","Email and WhatsApp inbox","/inbox"),("Brand mentions","Mention monitoring setup","/signals"),("Texting and consent","WhatsApp and contact permissions","/whatsapp")]),
-      ("Your agent", [("Connect and permissions","AI provider and approval boundaries","/settings"),("Agent activity","Review actions and history","/activity"),("Autopilot","Start, pause and inspect the research loop","/controls")]),
+      ("Your agent", [("Scout AI agent","Research companies, identify signals and prepare outreach plans","/agent"),("Connect and permissions","AI provider and approval boundaries","/settings"),("Agent activity","Review actions and history","/activity"),("Autopilot","Start, pause and inspect the research loop","/controls")]),
       ("Account", [("Calendar and bookings","Meetings, schedule and booking link","/calendar"),("Engine","Automation status and event log","/controls"),("Events and webhooks","Outbound event integrations","/activity"),("Activity","Full action history","/activity"),("Help","Setup guide and local data","/help")]),
       ("Everything ZERO HAWK does", [("Feature suite","Companies, people, campaigns, warmup, inbox and analytics","/suite")])
     ]
@@ -239,9 +239,6 @@ def agent_run(goal: str = Form(...), company_id: str = Form(""), limit: int = Fo
     from .ai import ask_ai, provider_status
     from .db import list_companies, list_contacts, list_observations, log
     from .training import load_training
-    status = provider_status()
-    if not (status.get("connected") or status.get("status") == "connected"):
-        return page("<h1>Scout could not start</h1><p class='warning'>Your AI provider is not connected or has not passed its connection test.</p><a href='/settings'>Open AI settings →</a><p><a href='/agent'>Back to Scout</a></p>", "/agent")
     limit = max(1, min(int(limit or 10), 20))
     companies = list_companies(1000)
     if company_id.strip():
