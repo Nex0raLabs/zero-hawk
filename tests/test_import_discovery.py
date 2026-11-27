@@ -34,3 +34,21 @@ Duplicate Cafe,https://www.first.example,0722222222,cafe,Nairobi
     assert response.status_code == 200
     assert "Imported 1; skipped 1" in response.text
     assert any(row["name"] == "First Cafe" for row in list_companies(100))
+
+
+def test_company_dedupe_matches_normalized_name_across_sources():
+    ident = add_company("Seven Seafood & Grill", "", source="openstreetmap")
+    assert find_company_duplicate("", "", "Seven Seafood and Grill") is None
+    assert find_company_duplicate("", "", "Seven Seafood & Grill")["id"] == ident
+    assert add_company("Seven Seafood & Grill", "", source="google_maps") == ident
+    assert len([x for x in list_companies(100) if x["name"] == "Seven Seafood & Grill"]) == 1
+
+
+def test_google_maps_search_link_available_without_api_key(monkeypatch):
+    from openprospect.discovery import discover_google_maps
+    monkeypatch.delenv("ZERO_HAWK_GOOGLE_MAPS_API_KEY", raising=False)
+    monkeypatch.delenv("GOOGLE_MAPS_API_KEY", raising=False)
+    result = discover_google_maps("Nairobi, Kenya", "restaurant", 10)
+    assert result["configured"] is False
+    assert "google.com/maps/search" in result["maps_url"]
+    assert result["results"] == []
