@@ -54,6 +54,9 @@ def install_security(app: FastAPI) -> None:
     """Require a private token cookie and accept only loopback Host headers."""
     @app.middleware("http")
     async def local_dashboard_guard(request: Request, call_next):
+        # Meta webhooks are public endpoints; the route verifies Meta's challenge and HMAC signature.
+        if request.url.path == "/webhooks/whatsapp" and request.method in {"GET", "POST"}:
+            return await call_next(request)
         host = request.url.hostname or ""
         if host not in {"127.0.0.1", "::1", "localhost"}:
             return JSONResponse({"detail": "Zero Hawk only accepts local connections."}, status_code=403)
