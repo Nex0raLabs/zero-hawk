@@ -181,9 +181,39 @@ def create_company_draft(company_id:int,contact_id:str=Form(""),subject:str=Form
   contact=None
   if contact_id.strip():contact=c.execute("SELECT * FROM contacts WHERE id=? AND company_id=?",(int(contact_id),company_id)).fetchone()
   if contact and contact["email"] and is_suppressed(contact["email"]):raise HTTPException(400,"Address is suppressed.")
- prompt=f"Write a concise, truthful first-contact email draft. Do not invent facts or claim prior contact. Business: {company['name']}. Website: {company['website']}. Industry: {company['industry']}. Location: {company['location']}. Notes: {company['notes']}. Contact: {dict(contact) if contact else 'not specified'}. Sender offer/context: {context}. Include a clear opt-out line. Return subject on first line, then a blank line, then body."
+  observations=[dict(item) for item in c.execute(
+   "SELECT label,weight,confidence,evidence_url FROM observations WHERE company_id=? ORDER BY id DESC LIMIT 12",
+   (company_id,)
+  ).fetchall()]
  try:
-  answer=ask_ai(prompt,system="You draft compliant, truthful business correspondence. Never fabricate facts, personal relationships, or consent.")
+  from .training import load_training
+  training=load_training()
+ except Exception:
+  training={}
+ sender_offer=training.get("offer") or "ARTCRAFT STUDIO provides website design, logo design, brand identity and graphic design for businesses."
+ sender_icp=training.get("icp") or "Restaurants and other local businesses that could benefit from a stronger online presence."
+ sender_signature=training.get("signature") or "ARTCRAFT STUDIO"
+ sender_voice=training.get("tone_of_voice") or "Professional, warm, concise and specific."
+ sender_cta=training.get("default_cta") or "Would you be open to a short conversation?"
+ prompt=(
+  "Write a concise, genuinely personalised first-contact email for a business prospect. "
+  "Use only the facts supplied below. Never invent a website defect, missing feature, result, relationship, "
+  "decision-maker, consent or prior interaction. Treat website observations as clues, not proof; only mention "
+  "a finding when its evidence supports it. If there are no useful evidence-backed opportunities, write a "
+  "polite introductory email without pretending to have found a problem. Do not use generic filler such as "
+  "'I am reaching out to introduce myself and learn whether there may be a fit'. "
+  "Do not use merge tags or placeholders such as [Your name]. Use the supplied sender signature exactly. "
+  "Include a brief, respectful opt-out sentence. Return the subject on the first line, a blank line, then the body.\n\n"
+  f"Prospect name in CRM (may be outdated; compare with website identity): {company['name']}\n"
+  f"Website: {company['website']}\nIndustry: {company['industry']}\nLocation: {company['location']}\n"
+  f"CRM notes: {company['notes']}\nWebsite observations (newest first): {json.dumps(observations, ensure_ascii=False)}\n"
+  f"Contact: {dict(contact) if contact else 'No contact linked'}\n"
+  f"Sender: ARTCRAFT STUDIO\nServices / offer: {sender_offer}\nIdeal customers: {sender_icp}\n"
+  f"Brand voice: {sender_voice}\nPreferred CTA: {sender_cta}\nSignature: {sender_signature}\n"
+  f"Additional user context for this draft: {context or 'Use the sender offer and verified website observations above.'}"
+ )
+ try:
+  answer=ask_ai(prompt,system="You are the careful sales copywriter for ARTCRAFT STUDIO. Follow the requested output format exactly. Be specific, evidence-led, concise and natural. Never invent facts or include placeholders.")
  except Exception as e:raise HTTPException(400,f"AI draft unavailable: {e}")
  lines=answer.splitlines();sub=subject or (lines[0].replace("Subject:","").strip() if lines else "Introduction")
  body="\n".join(lines[2:] if len(lines)>2 and not lines[1].strip() else lines[1:]).strip()
