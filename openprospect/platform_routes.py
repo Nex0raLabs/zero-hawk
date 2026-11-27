@@ -251,6 +251,14 @@ def whatsapp_conversation(conversation_id:int):
       <label><input type='checkbox' name='approved' value='yes' required style='width:auto'> I have reviewed and approve this exact message</label>
       <button>Send approved reply</button></form>
     </section>
+    <section><h2>Approved template message</h2><p class='muted'>Use an approved template when the customer-service window is closed. Template name and language must match Meta exactly.</p>
+      <form method='post' action='/whatsapp/conversation/{conversation_id}/template'>
+      <label>Approved template name</label><input name='template_name' placeholder='e.g. hello_world' required>
+      <label>Language code</label><input name='language' value='en_US' required>
+      <label>BODY parameters (optional, comma-separated, in template order)</label><input name='body_parameters' placeholder='First name, appointment time'>
+      <label><input type='checkbox' name='approved' value='yes' required style='width:auto'> I approve sending this exact template and its parameters</label>
+      <button>Send approved template</button></form>
+    </section>
     <section><h2>AI conversation analysis</h2><p>Analyse intent, sentiment, questions, objections, buying signals and recommended next action. AI analysis never sends a reply.</p>
       <form method='post' action='/whatsapp/conversation/{conversation_id}/analyze'><button class='secondary'>Analyse conversation</button></form>
     </section>
@@ -303,3 +311,23 @@ def whatsapp_conversation_manage(conversation_id:int,status:str=Form("open"),not
         raise HTTPException(404,"WhatsApp conversation not found.")
     update_conversation(conversation_id,status=status,notes=notes)
     return RedirectResponse(f"/whatsapp/conversation/{conversation_id}",303)
+
+
+@router.post("/whatsapp/conversation/{conversation_id}/template",response_class=HTMLResponse)
+def whatsapp_conversation_template(conversation_id:int,template_name:str=Form(...),language:str=Form("en_US"),body_parameters:str=Form(""),approved:str=Form("")):
+    from .conversations import get_conversation,add_message
+    from .whatsapp_cloud import send_template
+    from .app import esc
+    row=get_conversation(conversation_id)
+    if not row or row["channel"]!="whatsapp":
+        raise HTTPException(404,"WhatsApp conversation not found.")
+    if approved!="yes":
+        raise HTTPException(400,"Explicit approval is required.")
+    params=[part.strip() for part in body_parameters.split(",") if part.strip()]
+    try:
+        result=send_template(to=row["contact_address"],template_name=template_name,language=language,body_parameters=params,approved=True)
+        summary="[Approved WhatsApp template: "+template_name+"]"+(" "+" | ".join(params) if params else "")
+        add_message("whatsapp",result["id"],row["contact_address"],row["subject"],summary,"outbound")
+    except Exception as exc:
+        return page("WhatsApp template",f"<p class='warning'>Not sent: {esc(exc)}</p><a href='/whatsapp/conversation/{conversation_id}'>Back to conversation</a>")
+    return page("WhatsApp template",f"<p>Meta accepted the template message. Message ID: {esc(result['id'])}</p><a href='/whatsapp/conversation/{conversation_id}'>Return to conversation</a>")
