@@ -150,12 +150,17 @@ def save_booking_link(label:str=Form(...), url:str=Form(...)):
 def warmup_page():
     configured = bool(env_value("ZERO_HAWK_TRULYINBOX_API_KEY","") and env_value("ZERO_HAWK_TRULYINBOX_WORKSPACE_ID",""))
     if not configured:
-        return page("""<h1>Email warmup · TrulyInbox</h1><p class='muted'>Connect your TrulyInbox workspace to manage mailbox warmup from ZERO HAWK.</p>
-        <section><h2>Connect TrulyInbox</h2><p>Add these values to your local <code>.env</code> file, then restart ZERO HAWK.</p>
-        <pre>ZERO_HAWK_TRULYINBOX_API_KEY=your_workspace_or_personal_api_key
-ZERO_HAWK_TRULYINBOX_WORKSPACE_ID=your_numeric_workspace_id</pre>
+        return page("""<h1>Email warmup · Free tools</h1><p class='muted'>Choose a provider with a free plan. ZERO HAWK keeps your sending-readiness checklist here; start and manage warmup inside the provider unless you separately configure a supported API.</p>
+        <div class='cols'>
+        <section><h2>Warmerly Free</h2><span class='pill'>Best free ramp-up option</span><p>1 mailbox · no card · no time limit · free warmup. Also includes a limited campaign allowance.</p><a href='https://warmerly.com/pricing/' target='_blank' rel='noopener'>Open Warmerly pricing / signup →</a></section>
+        <section><h2>TrulyInbox Free</h2><span class='pill'>Free forever</span><p>1 mailbox · 10 warmup emails per day · no card.</p><a href='https://www.trulyinbox.com/pricing/' target='_blank' rel='noopener'>Open TrulyInbox pricing / signup →</a></section>
+        <section><h2>Warmup Inbox Freemium</h2><span class='pill'>Lowest volume</span><p>Unlimited inboxes · 15 warmup emails per week · no card.</p><a href='https://www.warmupinbox.com/pricing/' target='_blank' rel='noopener'>Open Warmup Inbox pricing / signup →</a></section>
+        </div>
+        <section><h2>Connect TrulyInbox API (optional)</h2><p>Add these values to your local .env file only if your account has API access, then restart ZERO HAWK.</p>
+        <pre>ZERO_HAWK_TRULYINBOX_API_KEY=your_api_key
+ZERO_HAWK_TRULYINBOX_WORKSPACE_ID=your_workspace_id</pre>
         <p><a href='https://dev.trulyinbox.com/docs' target='_blank' rel='noopener'>TrulyInbox API documentation →</a></p>
-        <p class='warning'>The API key is read only by the local backend. Never paste it into browser code or commit it to GitHub. TrulyInbox API access and warmup availability depend on your TrulyInbox plan.</p></section>""")
+        <p class='warning'>Do not buy a plan just to enable this integration. The free plan can be managed directly in TrulyInbox; API automation is optional and may require an eligible plan.</p></section>""")
     try:
         data = ti_request("/accounts?page=1&limit=50")
         accounts = data if isinstance(data,list) else data.get("accounts", data.get("items", [])) if isinstance(data,dict) else []
