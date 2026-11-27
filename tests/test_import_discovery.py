@@ -92,3 +92,13 @@ def test_google_maps_search_never_calls_paid_places_api(monkeypatch):
     assert result["results"] == []
     assert "no API key" in result["message"].lower()
     assert "google.com/maps/search" in result["maps_url"]
+
+
+
+def test_google_maps_routes_are_registered_once_for_free_mode():
+    routes = [
+        route for route in app.routes
+        if getattr(route, "path", None) == "/discover/google"
+    ]
+    assert sum("GET" in getattr(route, "methods", set()) for route in routes) == 1
+    assert sum("POST" in getattr(route, "methods", set()) for route in routes) == 1
