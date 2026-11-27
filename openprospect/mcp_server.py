@@ -8,7 +8,7 @@ from __future__ import annotations
 from mcp.server.fastmcp import FastMCP
 
 from .db import (
-    add_campaign, add_company, add_draft, connect, is_suppressed,
+    add_campaign, add_company, add_draft, connect, find_company_duplicate, is_suppressed,
     list_activity, list_campaigns, list_companies, list_contacts, list_drafts,
     save_company_observations,
 )
@@ -62,11 +62,7 @@ def discover_businesses(city_or_place: str, category: str = "any business", limi
     results = discover_osm(city_or_place, category, max(1, min(int(limit), 100)))
     saved, skipped = [], 0
     for item in results:
-        with connect() as conn:
-            duplicate = conn.execute(
-                "SELECT id FROM companies WHERE lower(website)=lower(?) AND website<>''",
-                (item.get("website", ""),),
-            ).fetchone() if item.get("website") else None
+        duplicate = find_company_duplicate(item.get("website", ""), item.get("phone", ""))
         if duplicate:
             skipped += 1
             continue
@@ -146,6 +142,11 @@ def prepare_personalized_email_draft(
         raise ValueError("Add a recipient email before preparing an email draft.")
     if is_suppressed(contact["email"]):
         raise ValueError("This recipient is on the suppression list and cannot be contacted.")
+    if campaign_id is not None:
+        with connect() as conn:
+            exists = conn.execute("SELECT 1 FROM campaigns WHERE id=?", (campaign_id,)).fetchone()
+        if not exists:
+            raise ValueError("Campaign not found.")
     training = load_training()
     prompt = f"""Prepare one concise, specific first-touch B2B email. Use only supported facts below.
 If a detail is unknown, do not invent it. Do not claim a verified result, relationship or urgency.
