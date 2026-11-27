@@ -19,9 +19,13 @@ async function connect(){
  });
  sock.ev.on('messages.upsert',async ({messages})=>{
   for(const m of messages||[]){
-   if(m.key?.fromMe||!m.message)continue;
-   const text= m.message.conversation || m.message.extendedTextMessage?.text || '';
-   const payload={channel:'whatsapp',external_id:m.key.id||String(Date.now()),address:m.key.remoteJid||'',subject:'WhatsApp message',body:text};
+   if(!m.message)continue;
+   const fromMe=Boolean(m.key?.fromMe);
+   const text=m.message.conversation || m.message.extendedTextMessage?.text ||
+    m.message.imageMessage?.caption || m.message.videoMessage?.caption ||
+    m.message.documentMessage?.caption || m.message.buttonsResponseMessage?.selectedDisplayText ||
+    m.message.listResponseMessage?.title || '[WhatsApp '+(Object.keys(m.message)[0]||'media')+' message]';
+   const payload={channel:'whatsapp',external_id:m.key.id||String(Date.now()),address:m.key.remoteJid||'',subject:m.pushName||'WhatsApp message',body:text,direction:fromMe?'outbound':'inbound'};
    const target=process.env.OPENPROSPECT_INBOUND_URL;
    if(target)fetch(target,{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+TOKEN},body:JSON.stringify(payload)}).catch(e=>console.error('Inbound callback failed',e.message));
   }
