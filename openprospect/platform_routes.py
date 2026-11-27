@@ -16,11 +16,15 @@ def page(title,body):
 
 @router.get("/inbox",response_class=HTMLResponse)
 def inbox():
+    from .app import esc
     ensure_schema(); rows=list_conversations()
-    body="".join(f"<section><b>{r['channel'].upper()} · {r['contact_address']}</b><p>{r['subject']}</p><p>{r['last_message'][:800]}</p><small>{r['updated_at']} · {r['status']}</small></section>" for r in rows)
+    body="".join(
+        f"<section><div style='display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap'><b>{esc(r['channel'].upper())} · {esc(r['contact_address'])}</b><span class='pill'>{'Unread' if r['unread'] else esc(r['status'])}</span></div><p>{esc(r['subject'])}</p><p>{esc(r['last_message'][:800])}</p><small>{esc(r['updated_at'])}</small><p><a href='/whatsapp/conversation/{r['id']}'>Open conversation →</a></p></section>"
+        for r in rows
+    )
     s=email_status(); m=imap_status()
     body+=f"<section><h2>Mailbox connections</h2><p>SMTP: {'Configured' if s['configured'] else 'Not connected'} · IMAP: {'Configured' if m['configured'] else 'Not connected'}</p><p>Configure ZERO_HAWK_SMTP_* and ZERO_HAWK_IMAP_* environment variables, then restart.</p><form method='post' action='/inbox/sync'><button>Sync IMAP now</button></form></section>"
-    return page("Unified conversations",body or "<p>No conversations yet. Connect IMAP or the WhatsApp sidecar to receive messages.</p>")
+    return page("Unified conversations",body or "<p>No conversations yet. Connect IMAP or WhatsApp to receive messages.</p>")
 
 @router.post("/inbox/sync",response_class=HTMLResponse)
 def inbox_sync():
