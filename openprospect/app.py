@@ -307,7 +307,7 @@ async def import_companies_csv(file:UploadFile=File(...)):
   name=(row.get("name") or "").strip()
   if not name: skipped+=1; continue
   phone=(row.get("phone") or "").strip(); website=(row.get("website") or "").strip()
-  if find_company_duplicate(website,phone): skipped+=1; continue
+  if find_company_duplicate(website,phone,name): skipped+=1; continue
   add_company(name,website,row.get("industry",""),row.get("location",""),row.get("notes",""),"csv_import",row.get("source_url",""),phone,row.get("email",""),row.get("socials","")); saved+=1
  return shell(f"<h1>Company CSV import</h1><p>Imported {saved}; skipped {skipped} empty or duplicate rows.</p><a href='/companies'>Back to companies</a>")
 
