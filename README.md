@@ -204,7 +204,7 @@ Zero Hawk now includes an official WhatsApp Business Cloud API integration and k
 
 The dashboard stores inbound messages, delivery/read status events, conversation notes and status. Open a WhatsApp thread to review it, ask the configured AI provider to analyse the conversation, or write and edit a reply. Sending requires the explicit approval checkbox, obeys the global sending pause and a configurable daily cap, and is never triggered by Autopilot.
 
-**Important limitations:** Cloud API free-form replies are subject to WhatsApp's customer-service window and template rules; approved templates outside that window are not implemented in this first integration. Media messages are recorded as message-type placeholders rather than downloaded into the local database. Previously delivered messages cannot be freely edited or deleted by this dashboard. Meta may charge for business messaging according to its current pricing and message category. Use the official Meta documentation for current eligibility, onboarding and pricing.
+**Important limitations:** Cloud API free-form replies are subject to WhatsApp's customer-service window. Approved template messages can be sent outside that window when the template is approved by Meta and the supplied language/parameters match. Media messages are recorded as message-type placeholders rather than downloaded into the local database. Previously delivered messages cannot be freely edited or deleted by this dashboard. Meta may charge for business messaging according to its current pricing and message category. Use the official Meta documentation for current eligibility, onboarding and pricing.
 
 ### Optional local WhatsApp Web sidecar
 
