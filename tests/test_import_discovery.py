@@ -38,7 +38,7 @@ Duplicate Cafe,https://www.first.example,0722222222,cafe,Nairobi
 
 def test_company_dedupe_matches_normalized_name_across_sources():
     ident = add_company("Seven Seafood & Grill", "", source="openstreetmap")
-    assert find_company_duplicate("", "", "Seven Seafood and Grill") is None
+    assert find_company_duplicate("", "", "Seven Seafood and Grill")["id"] == ident
     assert find_company_duplicate("", "", "Seven Seafood & Grill")["id"] == ident
     assert add_company("Seven Seafood & Grill", "", source="google_maps") == ident
     assert len([x for x in list_companies(100) if x["name"] == "Seven Seafood & Grill"]) == 1
