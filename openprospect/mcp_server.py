@@ -16,6 +16,10 @@ from .ai import ask_ai
 from .discovery import discover_osm
 from .profiling import profile_website
 from .training import load_training
+from .messaging import email_status, imap_status, sync_imap
+from .compliance import dns_report
+from .automation import loop_status
+from .sendpolicy import is_paused
 
 mcp = FastMCP("Zero Hawk")
 
@@ -190,6 +194,27 @@ def list_outreach_drafts(limit: int = 100) -> list[dict]:
 def read_recent_activity(limit: int = 50) -> list[dict]:
     """Read recent events recorded by Zero Hawk."""
     return list_activity(max(1, min(int(limit), 200)))
+
+
+@mcp.tool()
+def check_mailbox_and_sending_readiness(domain: str = "") -> dict:
+    """Check configured SMTP/IMAP connections, DNS records (if a domain is supplied), autopilot and send-pause state."""
+    result = {
+        "smtp": email_status(),
+        "imap": imap_status(),
+        "autopilot": loop_status(),
+        "sending_paused": is_paused(),
+        "note": "Configured credentials are not proof of a successful live login. Sending remains approval-gated.",
+    }
+    if domain.strip():
+        result["dns"] = dns_report(domain.strip())
+    return result
+
+
+@mcp.tool()
+def sync_inbox_messages(limit: int = 30) -> dict:
+    """Read unread email messages from the configured IMAP inbox into Zero Hawk. Does not send or reply."""
+    return sync_imap(max(1, min(int(limit), 100)))
 
 
 @mcp.tool()
