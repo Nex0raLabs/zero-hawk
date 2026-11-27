@@ -209,17 +209,15 @@ def warmup_health(account_id:int):
 @router.get("/agent", response_class=HTMLResponse)
 def agent_page():
     from .ai import provider_status
-    from .db import list_companies, list_contacts
+    from .db import list_companies
     status = provider_status()
     companies = list_companies(500)
-    contacts = list_contacts(1000)
-    connected = status.get("status") == "connected" or status.get("connected") is True
     company_options = "".join(f"<option value='{x['id']}'>{e(x['name'])}</option>" for x in companies)
     body = f"""
     <h1>Scout · AI workspace</h1>
     <p class='muted'>Give Scout a goal. It can use ZERO HAWK's saved company research, buying-signal evidence and connected AI provider to prepare an actionable plan.</p>
     <section><div style='display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap'>
-      <div><b>Agent connection</b><p class='muted'>Provider: {e(status.get('provider','unknown'))} · {e(status.get('status','Not connected'))}</p></div>
+      <div><b>Agent connection</b><p class='muted'>Provider selected: {e(status.get('provider','unknown'))} · connection is checked when Scout runs</p></div>
       <a href='/settings'>Configure AI →</a>
     </div><p class='warning'>Scout can research and prepare drafts. It cannot approve or send messages, change safety settings, or turn on autopilot.</p></section>
     <div class='cols'>
@@ -241,7 +239,7 @@ def agent_page():
 
 @router.post("/agent/run", response_class=HTMLResponse)
 def agent_run(goal: str = Form(...), company_id: str = Form(""), limit: int = Form(10)):
-    from .ai import ask_ai, provider_status
+    from .ai import ask_ai
     from .db import list_companies, list_contacts, list_observations, log
     from .training import load_training
     limit = max(1, min(int(limit or 10), 20))
