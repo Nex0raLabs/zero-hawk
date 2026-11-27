@@ -203,7 +203,7 @@ A compatible desktop/agent client can launch the server using the Python executa
 }
 ```
 
-Replace `YOUR_USER` with your Windows account folder. The current MCP tools cover searching saved companies, saving a company and asking the configured AI provider. They do not provide a remote cloud bridge into a browser-only chat.
+Replace `YOUR_USER` with your Windows account folder. The MCP agent tools can search and discover prospects, read saved company/contact data, research public websites and signals, read your product profile, check SMTP/IMAP and DNS readiness, sync unread IMAP messages, create campaign containers, prepare personalised drafts, and read activity. The agent cannot approve or send messages, change safety controls, or start Autopilot. See [AGENT_GUIDE.md](AGENT_GUIDE.md) for the full setup and tool list.
 
 ## 🛡️ Human control first
 
