@@ -52,3 +52,33 @@ def test_google_maps_search_link_available_without_api_key(monkeypatch):
     assert result["configured"] is False
     assert "google.com/maps/search" in result["maps_url"]
     assert result["results"] == []
+
+
+def test_google_maps_discovery_page_offers_free_search_and_manual_save():
+    client = _client()
+    page = client.get("/discover/google")
+    assert page.status_code == 200
+    assert "No Google Cloud account, API key or bank card" in page.text
+    response = client.post(
+        "/discover/google",
+        data={"city": "Nairobi, Kenya", "category": "restaurant"},
+    )
+    assert response.status_code == 200
+    assert "google.com/maps/search" in response.text
+    assert "google.com/search" in response.text
+
+
+def test_google_maps_manual_save_deduplicates_business():
+    client = _client()
+    data = {
+        "name": "Free Maps Test Cafe",
+        "website": "https://freemapstest.example",
+        "phone": "0712345678",
+        "email": "",
+        "location": "Nairobi, Kenya",
+        "source_url": "https://www.google.com/maps/search/?api=1&query=Free+Maps+Test+Cafe",
+    }
+    first = client.post("/discover/google/save", data=data)
+    second = client.post("/discover/google/save", data=data)
+    assert first.status_code == 200 and "Business saved" in first.text
+    assert second.status_code == 200 and "Already saved" in second.text
