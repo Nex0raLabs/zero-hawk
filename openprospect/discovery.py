@@ -61,15 +61,8 @@ def discover_osm(city,category="any business",limit=50):
  return [x for x in (_osm_item(e,category) for e in data.get("elements",[])) if x][:max(1,min(int(limit),200))]
 
 def discover_google_maps(city,category="any business",limit=20):
- key=os.getenv("ZERO_HAWK_GOOGLE_MAPS_API_KEY") or os.getenv("GOOGLE_MAPS_API_KEY")
+ """Build a Google Maps search URL without calling the paid Places API."""
  query=f"{category} in {city}".strip()
  maps_url="https://www.google.com/maps/search/?"+urllib.parse.urlencode({"api":"1","query":query})
- if not key:return {"results":[],"maps_url":maps_url,"configured":False,"message":"Google Maps search link is ready. Add ZERO_HAWK_GOOGLE_MAPS_API_KEY to .env to import Places results."}
- body=json.dumps({"textQuery":query,"pageSize":max(1,min(int(limit),20))}).encode()
- req=urllib.request.Request("https://places.googleapis.com/v1/places:searchText",data=body,method="POST",headers={"Content-Type":"application/json","X-Goog-Api-Key":key,"X-Goog-FieldMask":"places.id,places.displayName,places.formattedAddress,places.websiteUri,places.nationalPhoneNumber,places.primaryType,places.googleMapsUri"})
- with urllib.request.urlopen(req,timeout=30) as r:data=json.loads(r.read())
- results=[]
- for p in data.get("places",[]):
-  name=(p.get("displayName") or {}).get("text","")
-  if name:results.append({"name":name,"website":p.get("websiteUri",""),"phone":p.get("nationalPhoneNumber",""),"email":"","socials":"","category":p.get("primaryType",category),"address":p.get("formattedAddress",city),"source":"google_maps","source_url":p.get("googleMapsUri",maps_url)})
- return {"results":results,"maps_url":maps_url,"configured":True,"message":""}
+ return {"results":[],"maps_url":maps_url,"configured":False,
+         "message":"Free mode: open Google Maps, choose a listing, and save its published details manually. No API key, billing account, or Maps scraping is used."}
